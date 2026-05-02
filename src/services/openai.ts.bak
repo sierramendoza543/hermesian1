@@ -1,0 +1,47 @@
+import OpenAI from 'openai'
+
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('Missing OpenAI API Key')
+}
+
+export const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
+export async function generateDebateResponse(
+  messages: { content: string; role: 'user' | 'assistant' }[],
+  topic: string,
+  viewpoint: 'for' | 'against' | 'neutral'
+) {
+  try {
+    console.log('Generating response with:', { topic, viewpoint })
+    console.log('Messages:', messages)
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are a debate partner discussing the topic: "${topic}". 
+          Your stance is "${viewpoint}". 
+          Maintain a respectful, logical tone while presenting arguments aligned with your viewpoint.
+          Keep responses concise (max 2-3 sentences).
+          Use facts and logic to support your position.`
+        },
+        ...messages
+      ],
+      temperature: 0.7,
+      max_tokens: 150,
+    })
+
+    const response = completion.choices[0].message.content
+    console.log('OpenAI Response:', response)
+    return response
+  } catch (error) {
+    console.error('Error generating debate response:', error)
+    if (error instanceof Error) {
+      console.error('Error details:', error.message)
+    }
+    throw error
+  }
+} 
