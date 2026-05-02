@@ -1,10 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { google } from 'googleapis'
 
-if (!process.env.GOOGLE_API_KEY) {
-  console.warn('Missing Google API Key - Gemini features will be disabled')
-}
-
 // Initialize Gemini AI (only if API key is available)
 export const genAI = process.env.GOOGLE_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY) : null
 

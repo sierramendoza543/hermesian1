@@ -1,18 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  throw new Error('Missing Anthropic API Key')
-}
-
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY
+export const anthropic = anthropicApiKey
+  ? new Anthropic({ apiKey: anthropicApiKey })
+  : null
 
 export async function generateDebateResponse(
   messages: { content: string; role: 'user' | 'assistant' }[],
   topic: string,
   viewpoint: 'for' | 'against' | 'neutral'
 ) {
+  if (!anthropic) {
+    throw new Error('Anthropic API key is not configured')
+  }
   try {
     console.log('Generating response with:', { topic, viewpoint })
     console.log('Messages:', messages)

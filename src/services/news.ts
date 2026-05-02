@@ -54,6 +54,9 @@ export async function getTopHeadlines(): Promise<TopHeadline[]> {
       return await generateTopHeadlines()
     } catch (geminiError) {
       console.warn('Gemini failed, falling back to Claude:', geminiError)
+      if (!anthropic) {
+        return getFallbackHeadlines()
+      }
       
       const response = await anthropic.messages.create({
         model: 'claude-3-haiku-20240307',
@@ -130,6 +133,9 @@ export async function getArticlesForHeadline(headline: TopHeadline): Promise<New
 
 async function curateArticlesForHeadline(articles: NewsStory[], headline: TopHeadline): Promise<NewsStory[]> {
   try {
+    if (!anthropic) {
+      return articles.slice(0, 3)
+    }
     const sortedArticles = articles.sort((a, b) => {
       const aIsTrusted = TRUSTED_SOURCES.includes((a.source || '').toLowerCase())
       const bIsTrusted = TRUSTED_SOURCES.includes((b.source || '').toLowerCase())

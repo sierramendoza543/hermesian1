@@ -45,6 +45,12 @@ export async function GET(request: Request) {
         indices = await analyzeNewsContent(articles, headline)
       } catch (geminiError) {
         console.warn('Gemini failed, falling back to Claude:', geminiError)
+        if (!anthropic) {
+          return Response.json({
+            articles: articles.slice(0, 6),
+            aiProvider: 'fallback'
+          })
+        }
         // Fallback to Claude
         const aiResponse = await anthropic.messages.create({
           model: 'claude-3-haiku-20240307',
@@ -78,6 +84,12 @@ export async function GET(request: Request) {
         }
       }
     } else {
+      if (!anthropic) {
+        return Response.json({
+          articles: articles.slice(0, 6),
+          aiProvider: 'fallback'
+        })
+      }
       // Use Claude
       const aiResponse = await anthropic.messages.create({
         model: 'claude-3-haiku-20240307',
