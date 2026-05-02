@@ -29,7 +29,7 @@ export default function DebateHistoryModal({
 
   // Only load debates when modal is opened
   async function loadDebates() {
-    if (!user) {
+    if (!user || !db) {
       setLoading(false)
       return
     }

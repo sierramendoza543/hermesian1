@@ -7,6 +7,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!db) {
+      return NextResponse.json({ error: 'Debate storage is not configured' }, { status: 503 })
+    }
     const { id } = await params
     const debateRef = doc(db, 'debates', id)
     await deleteDoc(debateRef)

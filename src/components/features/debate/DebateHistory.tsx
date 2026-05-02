@@ -23,7 +23,7 @@ export default function DebateHistory() {
 
   useEffect(() => {
     async function loadDebates() {
-      if (!user) {
+      if (!user || !db) {
         setLoading(false)
         return
       }

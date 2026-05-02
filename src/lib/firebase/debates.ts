@@ -33,6 +33,9 @@ export async function saveDebateSession(
   viewpoint: string, 
   messages: any[]
 ): Promise<string> {
+  if (!db) {
+    throw new Error('Debate storage is not configured')
+  }
   console.log('Starting saveDebateSession with:', { userId, topic, viewpoint })
   
   if (!userId || !topic || !viewpoint) {
@@ -71,6 +74,9 @@ export async function updateDebateSession(
   messages: any[], 
   status: 'active' | 'completed' | 'archived' = 'active'
 ) {
+  if (!db) {
+    throw new Error('Debate storage is not configured')
+  }
   try {
     const debateRef = doc(db, 'debates', debateId)
     await updateDoc(debateRef, {
@@ -85,6 +91,9 @@ export async function updateDebateSession(
 }
 
 export async function deleteDebateSession(debateId: string) {
+  if (!db) {
+    throw new Error('Debate storage is not configured')
+  }
   try {
     const debateRef = doc(db, 'debates', debateId)
     await deleteDoc(debateRef)
@@ -95,6 +104,9 @@ export async function deleteDebateSession(debateId: string) {
 }
 
 export async function getUserDebates(userId: string) {
+  if (!db) {
+    throw new Error('Debate storage is not configured')
+  }
   try {
     const q = query(
       collection(db, 'debates'),
@@ -112,6 +124,9 @@ export async function getUserDebates(userId: string) {
 }
 
 export async function getDebateSession(debateId: string) {
+  if (!db) {
+    throw new Error('Debate storage is not configured')
+  }
   try {
     const debateRef = doc(db, 'debates', debateId)
     const debateSnap = await getDoc(debateRef)
