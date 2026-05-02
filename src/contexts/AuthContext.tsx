@@ -28,6 +28,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!auth) {
+      console.warn('Firebase auth is not configured; auth features are disabled.')
+      setLoading(false)
+      return () => {}
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
       
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase auth is not configured')
     try {
       await signInWithEmailAndPassword(auth, email, password)
     } catch (error) {
@@ -62,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase auth is not configured')
     try {
       await createUserWithEmailAndPassword(auth, email, password)
     } catch (error) {
@@ -71,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    if (!auth) throw new Error('Firebase auth is not configured')
     try {
       await signOut(auth)
     } catch (error) {

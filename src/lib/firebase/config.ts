@@ -13,13 +13,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-const auth = getAuth(app)
+const auth = typeof window !== 'undefined' ? getAuth(app) : null
 const db = getFirestore(app)
 
-// Set persistence to LOCAL
-setPersistence(auth, browserLocalPersistence)
-  .catch((error) => {
-    console.error('Auth persistence error:', error)
-  })
+// Set persistence only in browser runtime
+if (auth) {
+  setPersistence(auth, browserLocalPersistence)
+    .catch((error) => {
+      console.error('Auth persistence error:', error)
+    })
+}
 
 export { app, auth, db } 
