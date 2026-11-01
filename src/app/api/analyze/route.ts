@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { analyzeArticleWithGemini } from '@/services/gemini'
 import { analyzeArticleWithGroq } from '@/services/groq'
+import { assertPublicHttpUrl, rateLimited } from '@/lib/apiGuard'
 
 const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY
 const NEWS_API_URL = 'https://newsapi.org/v2/everything'
@@ -16,13 +17,25 @@ function decodeEntities(text: string) {
 }
 
 async function fetchHtmlFollow(url: string): Promise<{ finalUrl: string; html: string }> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hermesian/1.0)' },
-    redirect: 'follow',
-    cache: 'no-store'
-  })
-  const html = await res.text()
-  return { finalUrl: res.url || url, html }
+  // Follow redirects manually so every hop is checked against the SSRF guard
+  let current = url
+  for (let hop = 0; hop < 5; hop++) {
+    await assertPublicHttpUrl(current)
+    const res = await fetch(current, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hermesian/1.0)' },
+      redirect: 'manual',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000)
+    })
+    const location = res.headers.get('location')
+    if (res.status >= 300 && res.status < 400 && location) {
+      current = new URL(location, current).toString()
+      continue
+    }
+    const html = (await res.text()).slice(0, 2_000_000)
+    return { finalUrl: current, html }
+  }
+  throw new Error('Too many redirects')
 }
 
 function extractFromJsonLd(html: string): { title?: string; articleBody?: string; description?: string } | null {
@@ -122,6 +135,9 @@ async function fetchArticleText(url: string): Promise<{ title?: string; text: st
 }
 
 export async function GET(request: Request) {
+  if (rateLimited(request, 'analyze', 10)) {
+    return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 })
+  }
   try {
     const { searchParams } = new URL(request.url)
     const headline = (searchParams.get('headline') || '').trim()
@@ -183,6 +199,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (rateLimited(request, 'analyze', 10)) {
+    return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 })
+  }
   try {
     const body = await request.json()
     const headline: string | undefined = body?.headline

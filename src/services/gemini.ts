@@ -30,17 +30,6 @@ export async function generateDebateResponse(
   }
 
   try {
-    console.log('Generating Gemini response with:', { topic, viewpoint })
-    console.log('Messages:', messages)
-
-    // Convert messages to Gemini format
-    const chat = model.startChat({
-      history: messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }))
-    })
-
     const systemPrompt = `You are a debate partner discussing the topic: "${topic || 'technology and sustainability'}". 
       Your stance is "${viewpoint}". 
       Maintain a respectful, logical tone while presenting arguments aligned with your viewpoint.
@@ -49,7 +38,22 @@ export async function generateDebateResponse(
       Ensure all responses are appropriate for all ages and avoid harmful content.
       Focus on constructive dialogue and mutual understanding.`
 
-    const result = await chat.sendMessage(systemPrompt)
+    const last = messages[messages.length - 1]
+    // Gemini history must start with a user turn
+    const history = messages.slice(0, -1)
+    while (history.length && history[0].role !== 'user') history.shift()
+
+    const chat = genAI.getGenerativeModel({
+      model: GEMINI_FREE_MODEL,
+      systemInstruction: systemPrompt
+    }).startChat({
+      history: history.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }))
+    })
+
+    const result = await chat.sendMessage(last.content)
     const response = await result.response
     const text = response.text()
 
@@ -57,7 +61,6 @@ export async function generateDebateResponse(
       throw new Error('No text in Gemini response')
     }
 
-    console.log('Gemini Response Text:', text)
     return text
 
   } catch (error) {

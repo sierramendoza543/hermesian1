@@ -1,5 +1,6 @@
 import { NewsStory } from '@/types'
 import axios from 'axios'
+import { rateLimited } from '@/lib/apiGuard'
 import { anthropic } from '@/services/claude'
 import { analyzeNewsContent } from '@/services/gemini'
 
@@ -7,6 +8,9 @@ const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY
 const NEWS_API_URL = 'https://newsapi.org/v2/everything'
 
 export async function GET(request: Request) {
+  if (rateLimited(request, 'news-articles', 30)) {
+    return Response.json([], { status: 429 })
+  }
   const { searchParams } = new URL(request.url)
   const headline = searchParams.get('headline')
   const terms = searchParams.get('terms')

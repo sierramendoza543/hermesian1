@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
   setPersistence,
   browserLocalPersistence,
   getIdToken
@@ -34,22 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return () => {}
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       setUser(user)
       
       if (user) {
         try {
           const token = await user.getIdToken()
-          // Set both cookies for compatibility
-          document.cookie = `__session=${token}; path=/`
-          document.cookie = `__firebase_auth_token=${token}; path=/`
+          // Only the middleware's presence/expiry check reads this cookie
+          const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+          document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax${secure}`
         } catch (error) {
           console.error('Error getting auth token:', error)
         }
       } else {
-        // Clear both cookies
-        document.cookie = `__session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT`
-        document.cookie = `__firebase_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT`
+        document.cookie = '__session=; path=/; max-age=0; SameSite=Lax'
       }
       
       setLoading(false)

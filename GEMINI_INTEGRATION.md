@@ -46,7 +46,7 @@ This project now includes Google Gemini AI integration alongside the existing Cl
 Add your Google API key to your environment configuration:
 
 ```bash
-GOOGLE_API_KEY=AIzaSyC9Rfj-zz7bdLwfa00f9gmIdUqnG-gIxWs
+GOOGLE_API_KEY=your-google-api-key  # keep in .env.local, never commit
 ```
 
 ### 2. Dependencies

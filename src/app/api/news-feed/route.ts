@@ -10,151 +10,6 @@ const NEWS_CHANNELS = [
   { id: 'UCqnbDFdCpuN8CMEg0VuEBqA', name: 'The New York Times' }, // Verified: The New York Times
 ];
 
-// Curated list of real news videos from major channels
-// Each video has a unique ID and embed URL to avoid React key conflicts
-const CURATED_NEWS_VIDEOS = [
-  {
-    id: "BBC001",
-    title: "BBC News - Latest Headlines",
-    description: "Breaking news and latest updates from around the world. Stay informed with BBC News coverage of current events, politics, and global developments.",
-    channelTitle: "BBC News",
-    channelId: "UCBi2mrWuNuyYy4gbM6fU18Q",
-    publishedAt: new Date().toISOString(),
-    duration: "PT5M30S",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    viewCount: "1250000",
-    likeCount: "45000",
-    topic: "General News"
-  },
-  {
-    id: "PBS001",
-    title: "PBS NewsHour - Current Events Analysis",
-    description: "In-depth analysis of today's most important news stories. PBS NewsHour provides comprehensive coverage of politics, economics, and social issues.",
-    channelTitle: "PBS NewsHour",
-    channelId: "UCY1kMZp36IQSyNx_9h4mpCg",
-    publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT7M15S",
-    thumbnail: "https://img.youtube.com/vi/YQHsXMglC9A/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/YQHsXMglC9A",
-    viewCount: "890000",
-    likeCount: "32000",
-    topic: "Politics"
-  },
-  {
-    id: "BLOOM001",
-    title: "Bloomberg - Market Update",
-    description: "Latest financial news and market analysis. Bloomberg provides insights into global markets, economic trends, and business developments.",
-    channelTitle: "Bloomberg",
-    channelId: "UC2D2CMWXMOVWx7giW1n3LIg",
-    publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT4M45S",
-    thumbnail: "https://img.youtube.com/vi/M7lc1UVf-VE/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/M7lc1UVf-VE",
-    viewCount: "2100000",
-    likeCount: "78000",
-    topic: "Economy"
-  },
-  {
-    id: "CNN001",
-    title: "CNN Breaking News",
-    description: "Breaking news coverage from CNN. Stay updated with the latest developments in politics, world events, and breaking stories.",
-    channelTitle: "CNN",
-    channelId: "UCBJycsmduvYEL83R_U4JriQ",
-    publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT6M20S",
-    thumbnail: "https://img.youtube.com/vi/kJQP7kiw5Fk/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/kJQP7kiw5Fk",
-    viewCount: "1560000",
-    likeCount: "56000",
-    topic: "International"
-  },
-  {
-    id: "ECON001",
-    title: "The Economist - Global Analysis",
-    description: "In-depth analysis of global economic and political trends. The Economist provides expert commentary on world affairs and policy developments.",
-    channelTitle: "The Economist",
-    channelId: "UCsooa4yRKGN_zEE8iknghZA",
-    publishedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT8M10S",
-    thumbnail: "https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/9bZkp7q19f0",
-    viewCount: "980000",
-    likeCount: "41000",
-    topic: "Economy"
-  },
-  {
-    id: "FT001",
-    title: "Financial Times - Market Briefing",
-    description: "Daily market briefing and financial news analysis. Financial Times provides expert insights into global markets and economic developments.",
-    channelTitle: "Financial Times",
-    channelId: "UCuAXFkgsw1L7xaCfnd5JJOw",
-    publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT5M55S",
-    thumbnail: "https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/jNQXAC9IVRw",
-    viewCount: "750000",
-    likeCount: "28000",
-    topic: "Economy"
-  },
-  {
-    id: "GUARD001",
-    title: "The Guardian - News Roundup",
-    description: "Daily news roundup covering politics, society, and global events. The Guardian provides independent journalism and analysis.",
-    channelTitle: "The Guardian",
-    channelId: "UC8butISFwT-Wl7EV0hUK0BQ",
-    publishedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT6M45S",
-    thumbnail: "https://img.youtube.com/vi/ScMzIvxBSi4/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/ScMzIvxBSi4",
-    viewCount: "1120000",
-    likeCount: "39000",
-    topic: "General News"
-  },
-  {
-    id: "NPR001",
-    title: "NPR News - Current Affairs",
-    description: "In-depth coverage of current affairs and policy analysis. NPR provides thoughtful journalism on politics, culture, and society.",
-    channelTitle: "NPR",
-    channelId: "UCX6OQ3DkcsbYNE6H8uQQuVA",
-    publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT7M30S",
-    thumbnail: "https://img.youtube.com/vi/3JZ_D3ELwOQ/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/3JZ_D3ELwOQ",
-    viewCount: "890000",
-    likeCount: "33000",
-    topic: "Politics"
-  },
-  {
-    id: "VOX001",
-    title: "Vox - Explained",
-    description: "Explaining the news and current events in an accessible way. Vox breaks down complex topics and provides context for important stories.",
-    channelTitle: "Vox",
-    channelId: "UCY1kMZp36IQSyNx_9h4mpCg",
-    publishedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT9M15S",
-    thumbnail: "https://img.youtube.com/vi/2lAe1cqCOXo/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/2lAe1cqCOXo",
-    viewCount: "1450000",
-    likeCount: "67000",
-    topic: "General News"
-  },
-  {
-    id: "ATL001",
-    title: "The Atlantic - Policy Analysis",
-    description: "Deep analysis of policy and political developments. The Atlantic provides thoughtful commentary on American politics and society.",
-    channelTitle: "The Atlantic",
-    channelId: "UC2D2CMWXMOVWx7giW1n3LIg",
-    publishedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-    duration: "PT8M40S",
-    thumbnail: "https://img.youtube.com/vi/4Z9mUjtFJYY/maxresdefault.jpg",
-    embedUrl: "https://www.youtube.com/embed/4Z9mUjtFJYY",
-    viewCount: "720000",
-    likeCount: "25000",
-    topic: "Politics"
-  }
-];
-
 interface VideoItem {
   id: string;
   title: string;
@@ -374,43 +229,19 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '15');
 
-    console.log('Fetching real news videos from YouTube RSS feeds...');
-
     // Try to fetch real videos from RSS feeds first
     let realVideos: VideoItem[] = [];
     try {
       realVideos = await getRealNewsVideos(limit); // Get up to the full limit of real videos
-      console.log(`Found ${realVideos.length} real news videos from RSS`);
     } catch (rssError) {
       console.warn('RSS feeds failed:', rssError);
     }
 
-    // If we have enough real videos, use only those
-    if (realVideos.length >= limit) {
-      return NextResponse.json({
-        success: true,
-        videos: realVideos.slice(0, limit),
-        totalCount: realVideos.length,
-        channels: NEWS_CHANNELS.map(c => c.name),
-        note: `Real news videos from ${realVideos.length} RSS feeds - no fallback needed`
-      });
-    }
-
-    // If we don't have enough real videos, supplement with curated ones
-    const shuffledCurated = [...CURATED_NEWS_VIDEOS].sort(() => Math.random() - 0.5);
-    const curatedVideos = shuffledCurated.slice(0, Math.max(0, limit - realVideos.length));
-    
-    // Mix them together with real videos first
-    const allVideos = [...realVideos, ...curatedVideos].slice(0, limit);
-
     return NextResponse.json({
       success: true,
-      videos: allVideos,
-      totalCount: allVideos.length,
+      videos: realVideos.slice(0, limit),
+      totalCount: realVideos.length,
       channels: NEWS_CHANNELS.map(c => c.name),
-      note: realVideos.length > 0 ? 
-        `Mixed content: ${realVideos.length} real RSS videos + ${curatedVideos.length} curated videos` :
-        "Curated news videos - RSS feeds unavailable"
     });
 
   } catch (error) {

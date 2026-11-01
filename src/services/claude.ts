@@ -14,11 +14,8 @@ export async function generateDebateResponse(
     throw new Error('Anthropic API key is not configured')
   }
   try {
-    console.log('Generating response with:', { topic, viewpoint })
-    console.log('Messages:', messages)
-
     const response = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
+      model: 'claude-sonnet-5-5',
       max_tokens: 150,
       temperature: 0.7,
       system: `You are a debate partner discussing the topic: "${topic || 'technology and sustainability'}". 
@@ -44,7 +41,6 @@ export async function generateDebateResponse(
       throw new Error('No text in Claude response')
     }
 
-    console.log('Claude Response Text:', text)
     return text
 
   } catch (error) {

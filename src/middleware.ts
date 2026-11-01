@@ -4,6 +4,17 @@ import type { NextRequest } from 'next/server'
 // Define public paths that don't require authentication
 const publicPaths = ['/login', '/signup', '/']
 
+function isUnexpiredJwt(token: string): boolean {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   
@@ -17,11 +28,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for Firebase auth session cookie
+  // Check for a Firebase ID token that is well-formed and unexpired.
+  // This does NOT verify the signature (firebase-admin can't run on the Edge
+  // runtime), so it only gates page navigation. Real authorization must
+  // happen where data is read/written (Firestore security rules).
   const session = request.cookies.get('__session')?.value
 
-  // If no session, redirect to login
-  if (!session) {
+  if (!session || !isUnexpiredJwt(session)) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', path)
     return NextResponse.redirect(loginUrl)
