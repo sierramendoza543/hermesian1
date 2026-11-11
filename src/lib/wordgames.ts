@@ -65,12 +65,26 @@ export interface NewsdleGame {
   storyHeadline: string
   outlets: number
   category: string
+  /** Same-length words from this story's headlines (names etc.) that count as valid guesses even if they aren't in the dictionary. */
+  extra: string[]
   options: { id: string; headline: string }[]
 }
 
 function maskWord(title: string, word: string): string {
   const re = new RegExp(`\\b${word}(?:['’]s)?\\b`, 'gi')
   return title.replace(re, (m) => '▢'.repeat(word.length) + (/['’]s$/i.test(m) ? "'s" : ''))
+}
+
+/** Letters-only words of a given length used in these headlines (uppercase). */
+function headlineWords(titles: string[], length: number): string[] {
+  const out = new Set<string>()
+  for (const t of titles) {
+    for (const m of t.matchAll(WORD_RE)) {
+      const w = normalizeWord(m[0]).toLowerCase()
+      if (w.length === length && /^[a-z]+$/.test(w)) out.add(w.toUpperCase())
+    }
+  }
+  return [...out]
 }
 
 export type PuzzleMode = 'daily' | 'random'
@@ -113,6 +127,7 @@ export async function buildNewsdle(opts: { mode?: PuzzleMode; storyId?: string }
       storyHeadline: story.headline,
       outlets: pick.df,
       category: story.category,
+      extra: headlineWords(titles, pick.word.length),
       options: ranked.slice(0, 5).map((s) => ({ id: s.id, headline: s.headline })),
       mode,
       day,

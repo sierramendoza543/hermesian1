@@ -19,6 +19,7 @@ interface Game {
   outlets: number
   category: string
   day?: string
+  extra?: string[]
   options: { id: string; headline: string }[]
 }
 
@@ -65,6 +66,8 @@ function NewsdleGame() {
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
   const [hintLevel, setHintLevel] = useState(0)
+  const [dict, setDict] = useState<Set<string> | null>(null)
+  const [shake, setShake] = useState(false)
   const savedRef = useRef(false)
 
   useEffect(() => {
@@ -114,6 +117,18 @@ function NewsdleGame() {
     }
   }, [mode, storyParam, round])
 
+  // Dictionary for checking guesses (loaded once, cached by the browser). If it can't load, guesses aren't blocked.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/words.txt')
+      .then((r) => (r.ok ? r.text() : Promise.reject()))
+      .then((t) => !cancelled && setDict(new Set(t.split('\n').filter(Boolean))))
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const word = game?.word || ''
   const len = word.length
   const won = guesses.includes(word)
@@ -125,27 +140,47 @@ function NewsdleGame() {
     setTimeout(() => setToast(''), 1400)
   }
 
+  // Always read the latest state, even if keys arrive faster than React re-renders
+  const live = useRef({ current, guesses, game, over, dict, mode, len })
+  live.current = { current, guesses, game, over, dict, mode, len }
+
   const submit = useCallback(() => {
-    if (!game || over) return
-    if (current.length < len) return flash('Not enough letters')
-    const next = [...guesses, current]
+    const { current: cur, guesses: gs, game: g, over: done, dict: d, mode: m, len: n } = live.current
+    if (!g || done) return
+    if (cur.length < n) return flash('Not enough letters')
+    const valid = cur === g.word || !d || d.has(cur.toLowerCase()) || (g.extra || []).includes(cur)
+    if (!valid) {
+      setShake(true)
+      setTimeout(() => setShake(false), 450)
+      return flash('Not in word list')
+    }
+    const next = [...gs, cur]
+    live.current.guesses = next
+    live.current.current = ''
     setGuesses(next)
     setCurrent('')
-    if (mode === 'daily') {
+    if (m === 'daily') {
       try {
         localStorage.setItem(`newsdle:daily:${etDay()}:progress`, JSON.stringify(next))
       } catch {}
     }
-  }, [game, over, current, len, guesses, mode])
+  }, [])
 
   const press = useCallback(
     (k: string) => {
-      if (!game || over) return
+      const { game: g, over: done, len: n } = live.current
+      if (!g || done) return
       if (k === 'ENTER') return submit()
-      if (k === 'BACK') return setCurrent((c) => c.slice(0, -1))
-      if (/^[A-Z]$/.test(k)) setCurrent((c) => (c.length < len ? c + k : c))
+      if (k === 'BACK') {
+        live.current.current = live.current.current.slice(0, -1)
+        return setCurrent(live.current.current)
+      }
+      if (/^[A-Z]$/.test(k) && live.current.current.length < n) {
+        live.current.current += k
+        setCurrent(live.current.current)
+      }
     },
-    [game, over, submit, len]
+    [submit]
   )
 
   useEffect(() => {
@@ -247,7 +282,7 @@ function NewsdleGame() {
                 const g = guesses[r]
                 const isCurrent = r === guesses.length && !over
                 return (
-                  <div key={r} className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${len}, minmax(0, 1fr))` }}>
+                  <div key={r} className={`grid gap-1.5 ${isCurrent && shake ? 'animate-[wiggle_0.4s]' : ''}`} style={{ gridTemplateColumns: `repeat(${len}, minmax(0, 1fr))` }}>
                     {Array.from({ length: len }).map((_, c) => {
                       const letter = g ? g[c] : isCurrent ? current[c] || '' : ''
                       const style = g ? TILE[marks[r][c]] : isCurrent && letter ? TILE.typing : TILE.empty
