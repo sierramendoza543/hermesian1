@@ -107,6 +107,11 @@ async function callClaude(o: GenerateOptions, deadline: number): Promise<string>
 async function callGemini(o: GenerateOptions, deadline: number): Promise<string> {
   let lastError = 'no model tried'
   const models = o.fast ? GEMINI_FAST : GEMINI_MODELS
+  // Every model cooling down (e.g. Google is briefly overloaded)? Wait for the first to come back rather than give up.
+  if (models.every((m) => (modelCooldown.get(m) ?? 0) > Date.now())) {
+    const wait = Math.min(...models.map((m) => modelCooldown.get(m) ?? 0)) - Date.now()
+    if (wait < deadline - Date.now() - 4000) await new Promise((r) => setTimeout(r, wait + 50))
+  }
   for (let mi = 0; mi < models.length; mi++) {
     const model = models[mi]
     if ((modelCooldown.get(model) ?? 0) > Date.now()) continue // out of quota / overloaded a moment ago
@@ -134,7 +139,7 @@ async function callGemini(o: GenerateOptions, deadline: number): Promise<string>
       lastError = `Gemini ${model} ${res.status}: ${body.slice(0, 160)}`
       // Per-minute limits clear fast; a daily quota doesn't
       if (res.status === 429) modelCooldown.set(model, Date.now() + (/PerDay/i.test(body) ? 20 * 60_000 : 25_000))
-      else if (res.status === 503 || res.status === 404) modelCooldown.set(model, Date.now() + 45_000)
+      else if (res.status === 503 || res.status === 404) modelCooldown.set(model, Date.now() + 15_000)
       continue
     }
     const data = await res.json()

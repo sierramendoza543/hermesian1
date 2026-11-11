@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { ArrowLeft, Lightbulb, RotateCcw, Shuffle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { recordActivity, saveGameScore } from '@/lib/firebase/userData'
+import { etDay } from '@/lib/daily'
+import { ModeSwitch, NextPuzzleCountdown, PlayMode, dailyLabel } from '@/components/games/ModeSwitch'
 import Skeleton from '@/components/ui/Skeleton'
 import Notice from '@/components/ui/Notice'
 
@@ -12,6 +14,14 @@ interface Group {
   storyId: string
   label: string
   words: string[]
+}
+
+interface Saved {
+  groups: Group[]
+  tiles: string[]
+  solved: number[]
+  mistakes: number
+  hintLevel: number
 }
 
 const COLORS = [
@@ -33,6 +43,8 @@ function shuffle<T>(a: T[]): T[] {
 
 export default function SortGame() {
   const { user } = useAuth()
+  const [mode, setMode] = useState<PlayMode>('daily')
+  const [round, setRound] = useState(0)
   const [groups, setGroups] = useState<Group[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [tiles, setTiles] = useState<string[]>([])
@@ -44,27 +56,50 @@ export default function SortGame() {
   const [hintLevel, setHintLevel] = useState(0)
   const savedRef = useRef(false)
 
-  const load = useCallback(() => {
-    setGroups(null)
-    setError(null)
-    fetch('/api/games/sort')
-      .then((r) => r.json().then((d) => (r.ok ? d : Promise.reject(new Error(d.error)))))
-      .then((d) => {
-        setGroups(d.groups)
-        setTiles(shuffle(d.groups.flatMap((g: Group) => g.words)))
-        setPicked([])
-        setSolved([])
-        setMistakes(0)
-        setSaved(false)
-        setHintLevel(0)
-        savedRef.current = false
-      })
-      .catch((e) => setError(e.message || 'Could not load the puzzle'))
+  const begin = useCallback((g: Group[], restore?: Saved) => {
+    setGroups(g)
+    setTiles(restore?.tiles || shuffle(g.flatMap((x) => x.words)))
+    setSolved(restore?.solved || [])
+    setMistakes(restore?.mistakes || 0)
+    setHintLevel(restore?.hintLevel || 0)
+    setPicked([])
+    setSaved(false)
+    savedRef.current = false
   }, [])
 
+  // Load a puzzle: today's (remembered on this device) or a brand-new random one
   useEffect(() => {
-    load()
-  }, [load])
+    setGroups(null)
+    setError(null)
+    const day = etDay()
+    if (mode === 'daily') {
+      try {
+        const raw = localStorage.getItem(`sort:daily:${day}`)
+        if (raw) {
+          const s = JSON.parse(raw) as Saved
+          return begin(s.groups, s)
+        }
+      } catch {}
+    }
+    let cancelled = false
+    const qs = new URLSearchParams({ mode: mode === 'daily' ? 'daily' : 'random' })
+    if (mode === 'daily') qs.set('day', day) // new URL each day so shared caches roll over
+    fetch(`/api/games/sort?${qs}`, { cache: mode === 'daily' ? 'default' : 'no-store' })
+      .then((r) => r.json().then((d) => (r.ok ? d : Promise.reject(new Error(d.error)))))
+      .then((d) => !cancelled && begin(d.groups))
+      .catch((e) => !cancelled && setError(e.message || 'Could not load the puzzle'))
+    return () => {
+      cancelled = true
+    }
+  }, [mode, round, begin])
+
+  // Keep today's progress so a refresh doesn't reset it
+  useEffect(() => {
+    if (mode !== 'daily' || !groups) return
+    try {
+      localStorage.setItem(`sort:daily:${etDay()}`, JSON.stringify({ groups, tiles, solved, mistakes, hintLevel } satisfies Saved))
+    } catch {}
+  }, [mode, groups, tiles, solved, mistakes, hintLevel])
 
   const groupOf = (w: string) => groups?.findIndex((g) => g.words.includes(w)) ?? -1
   const won = solved.length === 4
@@ -94,7 +129,7 @@ export default function SortGame() {
     if (next === undefined) return
     setPicked(groups[next].words.slice(0, 2))
     setHintLevel(2)
-    flash(`Those two go together`)
+    flash('Those two go together')
   }
 
   const submit = () => {
@@ -114,12 +149,29 @@ export default function SortGame() {
 
   useEffect(() => {
     if (!over || !user || !groups || savedRef.current) return
+    const flag = `sort:daily:${etDay()}:saved`
+    if (mode === 'daily') {
+      try {
+        if (localStorage.getItem(flag)) {
+          savedRef.current = true
+          setSaved(true)
+          return
+        }
+      } catch {}
+    }
     savedRef.current = true
     saveGameScore(user.uid, { game: 'sort', storyId: groups[0].storyId, storyHeadline: 'Story Sort', score: solved.length, total: 4 })
       .then(() => recordActivity(user.uid, 10 + solved.length * 8))
-      .then(() => setSaved(true))
+      .then(() => {
+        setSaved(true)
+        if (mode === 'daily') {
+          try {
+            localStorage.setItem(flag, '1')
+          } catch {}
+        }
+      })
       .catch(() => {})
-  }, [over, user, groups, solved.length])
+  }, [over, user, groups, solved.length, mode])
 
   const revealOrder = groups ? [...solved, ...[0, 1, 2, 3].filter((i) => !solved.includes(i))] : []
 
@@ -131,6 +183,8 @@ export default function SortGame() {
       <header className="mt-3 text-center">
         <h1 className="font-headline text-3xl font-black">Story Sort</h1>
         <p className="mt-1 text-sm text-muted">Four news stories, sixteen words. Group the words by story.</p>
+        <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setRound(0) }} />
+        {mode === 'daily' && <p className="mt-2 text-xs text-muted">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
       </header>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
@@ -138,7 +192,6 @@ export default function SortGame() {
 
       {groups && (
         <>
-          {/* solved / revealed groups */}
           <div className="mt-6 space-y-2">
             {revealOrder.filter((i) => solved.includes(i) || over).map((i) => (
               <Link
@@ -204,8 +257,13 @@ export default function SortGame() {
               <p className="font-headline text-2xl font-black">{won ? (mistakes === 0 ? 'Perfect!' : 'You sorted them all!') : `${solved.length}/4 stories sorted`}</p>
               <p className="mt-1 text-sm text-muted">Tap a group above to read that story.</p>
               <div className="mt-4 flex justify-center gap-2">
-                <button onClick={load} className="btn-primary !py-2"><RotateCcw className="h-4 w-4" /> New puzzle</button>
+                {mode === 'unlimited' ? (
+                  <button onClick={() => setRound((r) => r + 1)} className="btn-primary !py-2"><RotateCcw className="h-4 w-4" /> New puzzle</button>
+                ) : (
+                  <button onClick={() => setMode('unlimited')} className="btn-primary !py-2">Play unlimited</button>
+                )}
               </div>
+              {mode === 'daily' && <p className="mt-3 text-xs text-muted">Next daily puzzle in <NextPuzzleCountdown /></p>}
               <p className="mt-3 text-xs text-muted">
                 {user ? (saved ? 'Score saved to your profile.' : '') : <><Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link> to save scores.</>}
               </p>

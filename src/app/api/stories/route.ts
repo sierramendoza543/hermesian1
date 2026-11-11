@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { CATEGORIES, getAllStories, searchStories, Story } from '@/lib/stories'
 import { rateLimited, sanitizeShortText } from '@/lib/apiGuard'
 import { storyTerms } from '@/lib/wordgames'
-import { peekDigests } from '@/lib/digest'
 
 export const maxDuration = 60
 
@@ -51,7 +50,7 @@ export async function GET(request: Request) {
     if (!q) stories = category === 'top' ? [...diversify(stories.filter((s) => s.isTop)), ...stories.filter((s) => !s.isTop)] : stories.filter((s) => s.tags.includes(category))
 
     return NextResponse.json(
-      { stories: stories.slice(offset, offset + limit), digests: peekDigests(stories.slice(offset, offset + limit)), total: stories.length, hasMore: offset + limit < stories.length, categories: CATEGORIES, trending: q || offset ? [] : trendingTerms(everything), query: q || null, fetchedAt: new Date().toISOString() },
+      { stories: stories.slice(offset, offset + limit), total: stories.length, hasMore: offset + limit < stories.length, categories: CATEGORIES, trending: q || offset ? [] : trendingTerms(everything), query: q || null, fetchedAt: new Date().toISOString() },
       { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } }
     )
   } catch (error) {

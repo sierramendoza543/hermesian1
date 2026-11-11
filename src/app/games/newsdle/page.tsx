@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Check, Copy, Delete } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { recordActivity, saveGameScore } from '@/lib/firebase/userData'
+import { etDay } from '@/lib/daily'
+import { ModeSwitch, NextPuzzleCountdown, PlayMode, dailyLabel } from '@/components/games/ModeSwitch'
 import Skeleton from '@/components/ui/Skeleton'
 import Notice from '@/components/ui/Notice'
 
@@ -16,6 +18,7 @@ interface Game {
   storyHeadline: string
   outlets: number
   category: string
+  day?: string
   options: { id: string; headline: string }[]
 }
 
@@ -51,6 +54,8 @@ const TILE: Record<Mark | 'empty' | 'typing', string> = {
 function NewsdleGame() {
   const params = useSearchParams()
   const storyParam = params.get('story')
+  const [mode, setMode] = useState<PlayMode>(params.get('mode') === 'unlimited' || storyParam ? 'unlimited' : 'daily')
+  const [round, setRound] = useState(0)
   const { user } = useAuth()
   const [game, setGame] = useState<Game | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -65,21 +70,49 @@ function NewsdleGame() {
   useEffect(() => {
     setGame(null)
     setError(null)
-    fetch(`/api/games/newsdle${storyParam ? `?story=${storyParam}` : ''}`)
+    setGuesses([])
+    setCurrent('')
+    setHintLevel(0)
+    setSaved(false)
+    savedRef.current = false
+    const day = etDay()
+
+    const start = (g: Game) => {
+      setGame(g)
+      try {
+        const raw = mode === 'daily' ? localStorage.getItem(`newsdle:daily:${day}:progress`) : null
+        setGuesses(raw ? JSON.parse(raw) : [])
+      } catch {}
+    }
+
+    // Today's puzzle is remembered, so everyone on this device sees the same word all day
+    if (mode === 'daily') {
+      try {
+        const cached = localStorage.getItem(`newsdle:daily:${day}:puzzle`)
+        if (cached) return start(JSON.parse(cached))
+      } catch {}
+    }
+
+    const qs = new URLSearchParams({ mode: mode === 'daily' ? 'daily' : 'random' })
+    if (storyParam && mode === 'unlimited') qs.set('story', storyParam)
+    if (mode === 'daily') qs.set('day', day) // new URL each day so shared caches roll over
+    let cancelled = false
+    fetch(`/api/games/newsdle?${qs}`, { cache: mode === 'daily' ? 'default' : 'no-store' })
       .then((r) => r.json().then((d) => (r.ok ? d : Promise.reject(new Error(d.error)))))
       .then((g: Game) => {
-        setGame(g)
-        savedRef.current = false
-        try {
-          const raw = localStorage.getItem(`newsdle:${g.storyId}:${g.word}`)
-          setGuesses(raw ? JSON.parse(raw) : [])
-        } catch {
-          setGuesses([])
+        if (cancelled) return
+        if (mode === 'daily') {
+          try {
+            localStorage.setItem(`newsdle:daily:${day}:puzzle`, JSON.stringify(g))
+          } catch {}
         }
-        setCurrent('')
+        start(g)
       })
-      .catch((e) => setError(e.message || 'Could not load the puzzle'))
-  }, [storyParam])
+      .catch((e) => !cancelled && setError(e.message || 'Could not load the puzzle'))
+    return () => {
+      cancelled = true
+    }
+  }, [mode, storyParam, round])
 
   const word = game?.word || ''
   const len = word.length
@@ -98,10 +131,12 @@ function NewsdleGame() {
     const next = [...guesses, current]
     setGuesses(next)
     setCurrent('')
-    try {
-      localStorage.setItem(`newsdle:${game.storyId}:${game.word}`, JSON.stringify(next))
-    } catch {}
-  }, [game, over, current, len, guesses])
+    if (mode === 'daily') {
+      try {
+        localStorage.setItem(`newsdle:daily:${etDay()}:progress`, JSON.stringify(next))
+      } catch {}
+    }
+  }, [game, over, current, len, guesses, mode])
 
   const press = useCallback(
     (k: string) => {
@@ -140,13 +175,31 @@ function NewsdleGame() {
 
   useEffect(() => {
     if (!over || !user || !game || savedRef.current) return
+    // The daily puzzle only counts once per day, even if the page is reopened
+    const flag = `newsdle:daily:${etDay()}:saved`
+    if (mode === 'daily') {
+      try {
+        if (localStorage.getItem(flag)) {
+          savedRef.current = true
+          setSaved(true)
+          return
+        }
+      } catch {}
+    }
     savedRef.current = true
     const score = won ? ROWS + 1 - guesses.length : 0
     saveGameScore(user.uid, { game: 'newsdle', storyId: game.storyId, storyHeadline: game.storyHeadline, score, total: ROWS })
       .then(() => recordActivity(user.uid, 10 + score * 5))
-      .then(() => setSaved(true))
+      .then(() => {
+        setSaved(true)
+        if (mode === 'daily') {
+          try {
+            localStorage.setItem(flag, '1')
+          } catch {}
+        }
+      })
       .catch(() => {})
-  }, [over, user, game, won, guesses.length])
+  }, [over, user, game, won, guesses.length, mode])
 
   const share = async () => {
     const grid = marks.map((r) => r.map((m) => (m === 'hit' ? '🟩' : m === 'near' ? '🟨' : '⬛')).join('')).join('\n')
@@ -166,6 +219,8 @@ function NewsdleGame() {
       <header className="mt-3 text-center">
         <h1 className="font-headline text-3xl font-black">Newsdle</h1>
         <p className="mt-1 text-sm text-muted">Guess the word that headlines keep using.</p>
+        <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setRound(0) }} />
+        {mode === 'daily' && <p className="mt-2 text-xs text-muted">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
       </header>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
@@ -213,22 +268,19 @@ function NewsdleGame() {
               <p className="font-headline text-2xl font-black">{won ? `Solved in ${guesses.length}/${ROWS}!` : `The word was ${word}`}</p>
               <p className="mt-1 text-sm text-muted">From: {game.storyHeadline}</p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <Link href={`/story/${game.storyId}`} className="btn-primary !py-2">Read the story</Link>
+                {mode === 'unlimited' && (
+                  <button onClick={() => setRound((r) => r + 1)} className="btn-primary !py-2">Next word</button>
+                )}
+                {mode === 'daily' && (
+                  <button onClick={() => setMode('unlimited')} className="btn-primary !py-2">Play unlimited</button>
+                )}
+                <Link href={`/story/${game.storyId}`} className="btn-ghost !py-2">Read the story</Link>
                 <button onClick={share} className="btn-ghost !py-2">{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied' : 'Share'}</button>
               </div>
+              {mode === 'daily' && <p className="mt-3 text-xs text-muted">Next daily puzzle in <NextPuzzleCountdown /></p>}
               <p className="mt-3 text-xs text-muted">
                 {user ? (saved ? 'Score saved to your profile.' : '') : <><Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link> to save scores.</>}
               </p>
-              <div className="mt-5 border-t border-line pt-4 text-left">
-                <p className="label-mono mb-2">Play another story&apos;s word</p>
-                <div className="space-y-1.5">
-                  {game.options.filter((o) => o.id !== game.storyId).slice(0, 3).map((o) => (
-                    <Link key={o.id} href={`/games/newsdle?story=${o.id}`} className="block rounded-lg border border-line px-3 py-2 text-sm hover:border-primary">
-                      {o.headline.length > 70 ? `${o.headline.slice(0, 68)}…` : o.headline}
-                    </Link>
-                  ))}
-                </div>
-              </div>
             </div>
           ) : (
             <div className="mt-6 select-none space-y-1.5">

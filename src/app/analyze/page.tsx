@@ -3,12 +3,16 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { BookmarkPlus, Check, Link2, Loader2, Printer, RotateCcw, ScanSearch, FileText } from 'lucide-react'
+import { BookmarkPlus, Check, Flame, Clock, Link2, Loader2, Lock, Printer, RotateCcw, ScanSearch, FileText } from 'lucide-react'
 import type { AnalysisResult } from '@/lib/analysis'
 import { useAuth } from '@/contexts/AuthContext'
 import { recordActivity, saveAnalysis } from '@/lib/firebase/userData'
 import ReportView from '@/components/analyze/ReportView'
 import Notice from '@/components/ui/Notice'
+import Skeleton from '@/components/ui/Skeleton'
+import OutletIcon from '@/components/stories/OutletIcon'
+import { timeAgo } from '@/lib/format'
+import type { PickArticle } from '@/app/api/articles/route'
 
 const STEPS = [
   'Fetching the article',
@@ -36,6 +40,9 @@ function AnalyzeContent() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const autoRan = useRef(false)
+  const [picks, setPicks] = useState<{ popular: PickArticle[]; recent: PickArticle[] } | null>(null)
+  const [pickSort, setPickSort] = useState<'popular' | 'recent'>('popular')
+  const [picksError, setPicksError] = useState(false)
 
   const run = useCallback(
     async (payload: { url?: string; text?: string; title?: string; source?: string }) => {
@@ -99,6 +106,24 @@ function AnalyzeContent() {
       run({ url: qUrl, title: params.get('title') || undefined, source: params.get('source') || undefined })
     }
   }, [params, run])
+
+  // Trending articles to choose from
+  useEffect(() => {
+    fetch('/api/articles')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setPicks)
+      .catch(() => setPicksError(true))
+  }, [])
+
+  const analyzePick = (a: PickArticle) => {
+    setUrl(a.url)
+    setMode('url')
+    setTitle(a.title)
+    setSource(a.source)
+    setStoryId(a.storyId)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    run({ url: a.url, title: a.title, source: a.source })
+  }
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -205,6 +230,43 @@ function AnalyzeContent() {
               {loading ? 'Analyzing…' : 'Run the X-ray'}
             </button>
           </form>
+
+          {!loading && (
+            <section className="mt-8">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-headline text-xl font-bold">Or pick a story in the news</h2>
+                <div className="flex gap-1.5">
+                  <button onClick={() => setPickSort('popular')} className={`chip !py-1.5 text-xs ${pickSort === 'popular' ? 'chip-active' : ''}`}><Flame className="mr-1 h-3.5 w-3.5" /> Popular</button>
+                  <button onClick={() => setPickSort('recent')} className={`chip !py-1.5 text-xs ${pickSort === 'recent' ? 'chip-active' : ''}`}><Clock className="mr-1 h-3.5 w-3.5" /> Most recent</button>
+                </div>
+              </div>
+
+              {!picks && !picksError && <div className="space-y-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}</div>}
+              {picksError && <Notice>Couldn&apos;t load trending articles. You can still paste a link or text above.</Notice>}
+
+              <div className="space-y-2">
+                {picks?.[pickSort].map((a) => (
+                  <button
+                    key={a.url}
+                    onClick={() => analyzePick(a)}
+                    className="card flex w-full items-center gap-3 p-3 text-left transition hover:shadow-lift"
+                  >
+                    <OutletIcon name={a.source} domain={a.domain} lean={a.lean} size={34} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold leading-snug">{a.title}</span>
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                        <span>{a.source}</span>
+                        <span>· {timeAgo(a.publishedAt)}</span>
+                        <span>· {a.sourceCount} outlets covered it</span>
+                        {a.paywalled && <span className="inline-flex items-center gap-1 text-amber-700"><Lock className="h-3 w-3" /> paste needed</span>}
+                      </span>
+                    </span>
+                    <ScanSearch className="h-4 w-4 shrink-0 text-muted" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {loading && (
             <div className="card mt-6 p-5 md:p-7" aria-live="polite">

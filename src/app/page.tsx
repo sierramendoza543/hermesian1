@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Flame, Gamepad2, Play, RefreshCw, ScanSearch, Search, TrendingUp, X } from 'lucide-react'
 import type { Story } from '@/lib/stories'
-import type { Digest } from '@/lib/digest'
 import { rememberStory, timeAgo } from '@/lib/format'
 import StoryCard from '@/components/stories/StoryCard'
 import Skeleton from '@/components/ui/Skeleton'
@@ -17,7 +16,6 @@ interface Category {
 }
 
 const PAGE = 12
-const DIGEST_KEY = 'hermesian:digests'
 
 function readJSON<T>(storage: Storage | undefined, key: string): T | null {
   try {
@@ -35,7 +33,6 @@ function HomeContent() {
   const category = params.get('category') || 'top'
 
   const [stories, setStories] = useState<Story[]>([])
-  const [digests, setDigests] = useState<Record<string, Digest>>({})
   const [categories, setCategories] = useState<Category[]>([{ key: 'top', label: 'Top Stories' }])
   const [trending, setTrending] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,50 +40,9 @@ function HomeContent() {
   const [hasMore, setHasMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState(q)
-  const requested = useRef<Set<string>>(new Set())
-  const warmed = useRef(false)
   const sentinel = useRef<HTMLDivElement>(null)
 
   useEffect(() => setSearch(q), [q])
-
-  const mergeDigests = useCallback((incoming?: Record<string, Digest>) => {
-    if (!incoming || !Object.keys(incoming).length) return
-    Object.keys(incoming).forEach((id) => requested.current.add(id))
-    setDigests((prev) => {
-      const next = { ...prev, ...incoming }
-      try {
-        const keys = Object.keys(next)
-        const trimmed = keys.length > 300 ? Object.fromEntries(keys.slice(-300).map((k) => [k, next[k]])) : next
-        localStorage.setItem(DIGEST_KEY, JSON.stringify(trimmed))
-      } catch {}
-      return next
-    })
-  }, [])
-
-  // Summaries written earlier are available immediately
-  useEffect(() => {
-    const saved = readJSON<Record<string, Digest>>(typeof window !== 'undefined' ? localStorage : undefined, DIGEST_KEY)
-    if (saved) {
-      Object.keys(saved).forEach((id) => requested.current.add(id))
-      setDigests(saved)
-    }
-  }, [])
-
-  const fetchDigests = useCallback((batch: Story[]) => {
-    const ids = batch.map((s) => s.id).filter((id) => !requested.current.has(id))
-    if (!ids.length) return
-    ids.forEach((id) => requested.current.add(id))
-    for (let i = 0; i < ids.length; i += 8) {
-      fetch('/api/stories/digest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: ids.slice(i, i + 8) }),
-      })
-        .then((r) => r.json())
-        .then((d) => mergeDigests(d.digests))
-        .catch(() => {})
-    }
-  }, [mergeDigests])
 
   const load = useCallback(
     async (offset: number) => {
@@ -124,13 +80,6 @@ function HomeContent() {
             sessionStorage.setItem(cacheKey, JSON.stringify({ stories: data.stories, categories: data.categories, trending: data.trending, hasMore: Boolean(data.hasMore) }))
           } catch {}
         }
-        mergeDigests(data.digests)
-        fetchDigests(data.stories)
-        // Warm the video feed while the reader is busy with stories
-        if (!warmed.current) {
-          warmed.current = true
-          setTimeout(() => fetch('/api/videos?count=1').catch(() => {}), 1500)
-        }
       } catch (e) {
         if (!showedCache) setError(e instanceof Error ? e.message : 'Failed to load stories')
       } finally {
@@ -138,7 +87,7 @@ function HomeContent() {
         setLoadingMore(false)
       }
     },
-    [q, category, fetchDigests, mergeDigests]
+    [q, category]
   )
 
   useEffect(() => {
@@ -238,9 +187,9 @@ function HomeContent() {
 
           {!loading && stories.length > 0 && (
             <div className="space-y-4 animate-rise">
-              <StoryCard story={stories[0]} digest={digests[stories[0].id]} featured />
+              <StoryCard story={stories[0]} featured />
               {stories.slice(1).map((s) => (
-                <StoryCard key={s.id} story={s} digest={digests[s.id]} />
+                <StoryCard key={s.id} story={s} />
               ))}
               <div ref={sentinel} className="h-8" />
               {loadingMore && <Skeleton className="h-40" />}
@@ -261,7 +210,7 @@ function HomeContent() {
                       <Link href={`/story/${s.id}`} onClick={() => rememberStory(s)} className="group flex gap-3">
                         <span className="font-headline text-xl font-black leading-none text-primary/60">{i + 1}</span>
                         <span>
-                          <span className="block text-sm font-semibold leading-snug group-hover:text-primary">{digests[s.id]?.title || s.headline}</span>
+                          <span className="block text-sm font-semibold leading-snug group-hover:text-primary">{s.headline}</span>
                           <span className="mt-0.5 block text-[11px] text-muted">{s.category} · {s.sourceCount} outlets · {timeAgo(s.publishedAt)}</span>
                         </span>
                       </Link>

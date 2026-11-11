@@ -1,6 +1,5 @@
 import { resolveGoogleNewsUrl } from '@/lib/extract'
 import { assertPublicHttpUrl } from '@/lib/apiGuard'
-import type { Story } from '@/lib/stories'
 
 // Finds a lead image for a story by reading og:image from the first outlet
 // page that cooperates. Results (including misses) are cached.
@@ -53,8 +52,13 @@ async function fetchHead(url: string): Promise<string | null> {
   return ogImage(html, res.url || url)
 }
 
-async function find(story: Story): Promise<string | null> {
-  const ranked = [...story.articles].sort((a, b) => {
+export interface ImageSource {
+  url: string
+  domain: string
+}
+
+async function find(articles: ImageSource[]): Promise<string | null> {
+  const ranked = [...articles].sort((a, b) => {
     const ra = FRIENDLY.findIndex((d) => a.domain.endsWith(d))
     const rb = FRIENDLY.findIndex((d) => b.domain.endsWith(d))
     return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb)
@@ -70,19 +74,19 @@ async function find(story: Story): Promise<string | null> {
   return null
 }
 
-export async function getStoryImage(story: Story): Promise<string | null> {
-  const hit = cache.get(story.id)
+export async function getStoryImage(id: string, articles: ImageSource[]): Promise<string | null> {
+  const hit = cache.get(id)
   if (hit && Date.now() - hit.at < TTL) return hit.url
-  let p = inflight.get(story.id)
+  let p = inflight.get(id)
   if (!p) {
-    p = find(story)
+    p = find(articles)
       .then((url) => {
-        cache.set(story.id, { at: Date.now(), url })
+        cache.set(id, { at: Date.now(), url })
         if (cache.size > 1500) for (const k of [...cache.keys()].slice(0, 500)) cache.delete(k)
         return url
       })
-      .finally(() => inflight.delete(story.id))
-    inflight.set(story.id, p)
+      .finally(() => inflight.delete(id))
+    inflight.set(id, p)
   }
   return p
 }

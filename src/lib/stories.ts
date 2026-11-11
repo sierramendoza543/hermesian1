@@ -126,15 +126,23 @@ function guidOf(url: string): string {
 }
 
 async function fetchFeed(url: string): Promise<any[]> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hermesian/1.0)' },
-    signal: AbortSignal.timeout(12_000),
-    next: { revalidate: 600 },
-  } as RequestInit)
-  if (!res.ok) throw new Error(`Feed ${res.status}`)
-  const xml = await res.text()
-  const parsed = await parseStringPromise(xml)
-  return parsed?.rss?.channel?.[0]?.item || []
+  let lastError: unknown = new Error('Feed failed')
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 400))
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hermesian/1.0)' },
+        signal: AbortSignal.timeout(12_000),
+        next: { revalidate: 600 },
+      } as RequestInit)
+      if (!res.ok) throw new Error(`Feed ${res.status}`)
+      const parsed = await parseStringPromise(await res.text())
+      return parsed?.rss?.channel?.[0]?.item || []
+    } catch (err) {
+      lastError = err
+    }
+  }
+  throw lastError
 }
 
 function parseItem(item: any, grouped: boolean): RawArticle[] {

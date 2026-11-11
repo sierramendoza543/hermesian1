@@ -2,15 +2,15 @@ export const GAMES = {
   newsdle: {
     key: 'newsdle',
     title: 'Newsdle',
-    tagline: 'Guess the word the headlines keep using.',
-    description: 'A word puzzle built from the top story. Six tries.',
+    tagline: 'Daily word puzzle from the news. Play unlimited too.',
+    description: 'A new word every day (ET), plus unlimited rounds.',
     color: '#059669',
     href: '/games/newsdle',
   },
   sort: {
     key: 'sort',
     title: 'Story Sort',
-    tagline: 'Sort 16 words into the 4 stories they came from.',
+    tagline: 'Daily connections puzzle. Play unlimited too.',
     description: 'A connections-style puzzle across today\'s biggest stories.',
     color: '#7c3aed',
     href: '/games/sort',

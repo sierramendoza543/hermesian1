@@ -200,7 +200,7 @@ export default function StoryPage() {
             <span className="ml-auto flex items-center gap-1"><Sparkles className="h-3 w-3" /> AI-assisted</span>
           )}
         </div>
-        <StoryImage id={story.id} label={story.category} className="mt-4 aspect-[16/7] w-full rounded-2xl" />
+        <StoryImage id={story.id} articles={story.articles} label={story.category} className="mt-4 aspect-[16/7] w-full rounded-2xl" />
         <h1 className="mt-4 font-headline text-2xl font-black leading-tight md:text-4xl">{brief?.headline || story.headline}</h1>
 
         <div className="mt-4 flex flex-wrap gap-2">

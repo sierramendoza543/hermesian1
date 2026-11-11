@@ -15,9 +15,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const id = sanitizeShortText(body?.id, 40)
-    let story: StoryBriefInput | null = id ? await getStoryById(id) : null
+    let story: StoryBriefInput | null = null
 
-    if (!story && Array.isArray(body?.story?.articles) && id) {
+    // The page already has the story, so use what it sent; only fall back to a server lookup by id
+    if (Array.isArray(body?.story?.articles) && body.story.articles.length >= 2 && id) {
       const articles = body.story.articles.slice(0, 14).map((a: any) => {
         const outlet = lookupOutlet(String(a?.source || ''), a?.domain ? `https://${a.domain}` : undefined)
         return {
@@ -37,6 +38,8 @@ export async function POST(request: Request) {
         category: sanitizeShortText(body.story.category, 40) || 'News',
         articles,
       } as StoryBriefInput
+    } else if (id) {
+      story = await getStoryById(id)
     }
     if (!story || story.articles.length === 0) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 })

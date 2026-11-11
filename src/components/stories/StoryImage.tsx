@@ -13,7 +13,17 @@ const GRADIENTS = [
 ]
 
 /** Lazy lead image for a story; falls back to a tinted placeholder. */
-export default function StoryImage({ id, label, className = '' }: { id: string; label?: string; className?: string }) {
+export default function StoryImage({
+  id,
+  articles,
+  label,
+  className = '',
+}: {
+  id: string
+  articles: { url: string; domain: string }[]
+  label?: string
+  className?: string
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [src, setSrc] = useState<string | null | undefined>(memo.get(id))
   const [broken, setBroken] = useState(false)
@@ -25,7 +35,8 @@ export default function StoryImage({ id, label, className = '' }: { id: string; 
       (entries) => {
         if (!entries[0].isIntersecting) return
         io.disconnect()
-        fetch(`/api/story-image?id=${id}`)
+        const a = encodeURIComponent(JSON.stringify(articles.slice(0, 5).map((x) => ({ u: x.url, d: x.domain }))))
+        fetch(`/api/story-image?id=${id}&a=${a}`)
           .then((r) => r.json())
           .then((d) => {
             memo.set(id, d.url || null)
@@ -37,7 +48,7 @@ export default function StoryImage({ id, label, className = '' }: { id: string; 
     )
     io.observe(el)
     return () => io.disconnect()
-  }, [id])
+  }, [id, articles])
 
   const gradient = GRADIENTS[id.charCodeAt(0) % GRADIENTS.length]
   return (

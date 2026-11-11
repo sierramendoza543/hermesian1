@@ -1,4 +1,5 @@
 import { getAllStories } from '@/lib/stories'
+import { etDay, seededRandom, shuffled } from '@/lib/daily'
 
 // Word-based news games, generated deterministically from real headlines:
 //  - Newsdle: guess the word most used in a story's headlines
@@ -72,29 +73,54 @@ function maskWord(title: string, word: string): string {
   return title.replace(re, (m) => '▢'.repeat(word.length) + (/['’]s$/i.test(m) ? "'s" : ''))
 }
 
-export async function buildNewsdle(storyId?: string): Promise<NewsdleGame | null> {
+export type PuzzleMode = 'daily' | 'random'
+
+const dailyCache = new Map<string, unknown>()
+
+function wordFor(story: { headline: string; articles: { title: string }[] }, rand: () => number, mode: PuzzleMode) {
+  const terms = storyTerms(story)
+  const good = terms.filter((t) => t.word.length >= 5 && t.word.length <= 8 && t.df >= 2)
+  if (mode === 'random' && good.length > 1) return good[Math.floor(rand() * Math.min(good.length, 5))]
+  return good[0] || terms.find((t) => t.word.length >= 5 && t.word.length <= 8) || terms.find((t) => t.word.length >= 4)
+}
+
+export async function buildNewsdle(opts: { mode?: PuzzleMode; storyId?: string } = {}): Promise<(NewsdleGame & { mode: PuzzleMode; day: string }) | null> {
+  const mode = opts.mode || 'random'
+  const day = etDay()
+  const cacheKey = `newsdle:${day}`
+  if (mode === 'daily' && !opts.storyId && dailyCache.has(cacheKey)) return dailyCache.get(cacheKey) as NewsdleGame & { mode: PuzzleMode; day: string }
+
   const stories = await getAllStories()
   const ranked = [...stories.filter((s) => s.isTop), ...stories.filter((s) => !s.isTop)]
-  const story = (storyId && stories.find((s) => s.id === storyId)) || ranked[0]
-  if (!story) return null
-  const terms = storyTerms(story)
-  const pick =
-    terms.find((t) => t.word.length >= 5 && t.word.length <= 8 && t.df >= 2) ||
-    terms.find((t) => t.word.length >= 5 && t.word.length <= 8) ||
-    terms.find((t) => t.word.length >= 4)
-  if (!pick) return null
+  const pool = ranked.slice(0, mode === 'daily' ? 12 : 40)
+  if (pool.length === 0) return null
 
-  const titles = [story.headline, ...story.articles.map((a) => a.title)]
-  const withWord = titles.find((t) => new RegExp(`\\b${pick.word}\\b`, 'i').test(t)) || story.headline
-  return {
-    word: pick.word.toUpperCase(),
-    hint: maskWord(withWord, pick.word),
-    storyId: story.id,
-    storyHeadline: story.headline,
-    outlets: pick.df,
-    category: story.category,
-    options: ranked.slice(0, 5).map((s) => ({ id: s.id, headline: s.headline })),
+  // Daily: the same pick for everyone all day. Unlimited: any story in the news.
+  const rand = mode === 'daily' ? seededRandom(`${day}:newsdle`) : Math.random
+  const forced = opts.storyId ? stories.find((s) => s.id === opts.storyId) : undefined
+  const start = Math.floor(rand() * pool.length)
+  const order = forced ? [forced] : [...pool.slice(start), ...pool.slice(0, start)]
+
+  for (const story of order) {
+    const pick = wordFor(story, rand, mode)
+    if (!pick) continue
+    const titles = [story.headline, ...story.articles.map((a) => a.title)]
+    const withWord = titles.find((t) => new RegExp(`\\b${pick.word}\\b`, 'i').test(t)) || story.headline
+    const game = {
+      word: pick.word.toUpperCase(),
+      hint: maskWord(withWord, pick.word),
+      storyId: story.id,
+      storyHeadline: story.headline,
+      outlets: pick.df,
+      category: story.category,
+      options: ranked.slice(0, 5).map((s) => ({ id: s.id, headline: s.headline })),
+      mode,
+      day,
+    }
+    if (mode === 'daily' && !opts.storyId) dailyCache.set(cacheKey, game)
+    return game
   }
+  return null
 }
 
 // ---------- Story Sort ----------
@@ -110,9 +136,17 @@ function shortLabel(headline: string): string {
   return h.length <= 64 ? h : `${h.slice(0, 61).replace(/\s+\S*$/, '')}…`
 }
 
-export async function buildSort(): Promise<SortGroup[] | null> {
+export async function buildSort(opts: { mode?: PuzzleMode } = {}): Promise<SortGroup[] | null> {
+  const mode = opts.mode || 'random'
+  const day = etDay()
+  const cacheKey = `sort:${day}`
+  if (mode === 'daily' && dailyCache.has(cacheKey)) return dailyCache.get(cacheKey) as SortGroup[]
+
   const stories = await getAllStories()
-  const pool = [...stories.filter((s) => s.isTop), ...stories.filter((s) => !s.isTop)].slice(0, 14)
+  const ranked = [...stories.filter((s) => s.isTop), ...stories.filter((s) => !s.isTop)]
+  const rand = mode === 'daily' ? seededRandom(`${day}:sort`) : Math.random
+  // Unlimited puzzles draw on more of the news; the daily one stays with the biggest stories
+  const pool = ranked.slice(0, 24)
   const termsByStory = pool.map((s) => ({ s, terms: storyTerms(s) }))
 
   // A word must belong to exactly one story in the pool to keep groups unambiguous
@@ -129,27 +163,36 @@ export async function buildSort(): Promise<SortGroup[] | null> {
     }
   }
 
+  const candidates = termsByStory
+    .map(({ s, terms }) => {
+      const ordered = [...terms].sort(
+        (a, b) => Number(b.df >= 2) - Number(a.df >= 2) || Number(b.proper) - Number(a.proper) || b.df - a.df || b.word.length - a.word.length
+      )
+      const picked: string[] = []
+      const pickedStems = new Set<string>()
+      for (const t of ordered) {
+        if (owners.get(t.word) !== 1 || stems.get(stem(t.word)) !== 1) continue
+        if (t.df < 2 && picked.length >= 2) continue
+        if (pickedStems.has(stem(t.word))) continue
+        picked.push(t.word)
+        pickedStems.add(stem(t.word))
+        if (picked.length === 4) break
+      }
+      return { s, picked }
+    })
+    .filter((c) => c.picked.length === 4)
+
+  // Daily keeps the biggest stories first (just seeded variety); unlimited shuffles everything
+  const order = mode === 'daily' ? shuffled(candidates.slice(0, 8), rand).concat(candidates.slice(8)) : shuffled(candidates, rand)
   const used = new Set<string>()
   const groups: SortGroup[] = []
-  for (const { s, terms } of termsByStory) {
+  for (const { s, picked } of order) {
     if (groups.length === 4) break
-    const picked: string[] = []
-    const pickedStems = new Set<string>()
-    const ordered = [...terms].sort(
-      (a, b) => Number(b.df >= 2) - Number(a.df >= 2) || Number(b.proper) - Number(a.proper) || b.df - a.df || b.word.length - a.word.length
-    )
-    for (const t of ordered) {
-      if (owners.get(t.word) !== 1 || stems.get(stem(t.word)) !== 1) continue
-      if (t.df < 2 && picked.length >= 2) continue // prefer words several outlets used
-      if (used.has(t.word) || pickedStems.has(stem(t.word))) continue
-      picked.push(t.word)
-      pickedStems.add(stem(t.word))
-      if (picked.length === 4) break
-    }
-    if (picked.length === 4) {
-      picked.forEach((w) => used.add(w))
-      groups.push({ storyId: s.id, label: shortLabel(s.headline), words: picked.map((w) => w.toUpperCase()) })
-    }
+    if (picked.some((w) => used.has(w))) continue
+    picked.forEach((w) => used.add(w))
+    groups.push({ storyId: s.id, label: shortLabel(s.headline), words: picked.map((w) => w.toUpperCase()) })
   }
-  return groups.length === 4 ? groups : null
+  if (groups.length < 4) return null
+  if (mode === 'daily') dailyCache.set(cacheKey, groups)
+  return groups
 }
