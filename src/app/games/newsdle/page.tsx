@@ -142,7 +142,9 @@ function NewsdleGame() {
 
   // Always read the latest state, even if keys arrive faster than React re-renders
   const live = useRef({ current, guesses, game, over, dict, mode, len })
-  live.current = { current, guesses, game, over, dict, mode, len }
+  useEffect(() => {
+    live.current = { current, guesses, game, over, dict, mode, len }
+  })
 
   const submit = useCallback(() => {
     const { current: cur, guesses: gs, game: g, over: done, dict: d, mode: m, len: n } = live.current
