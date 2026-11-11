@@ -52,7 +52,7 @@ export interface ClassifyInput {
 
 async function classifyChunk(items: ClassifyInput[]): Promise<void> {
   const lines = items.map((it, i) => `${i + 1}. ${it.text.slice(0, 150)}${it.hint && it.hint !== 'top' ? `  [feed: ${it.hint}]` : ''}`).join('\n')
-  const { data } = await generateJSON<{ labels: string[] }>({
+  const { data } = await generateJSON<{ labels: Record<string, string> }>({
     system: 'You are a news desk editor who files each headline under exactly one section.',
     prompt: `Sections (use the key):
 - politics: elections, Congress, the White House, parties, government policy and politicians
@@ -70,18 +70,19 @@ async function classifyChunk(items: ClassifyInput[]): Promise<void> {
 Headlines:
 ${lines}
 
-Return JSON: { "labels": [one section key per headline, in order, exactly ${items.length} entries] }`,
-    maxTokens: 1400,
+Return JSON keyed by the headline number: { "labels": { "1": "politics", "2": "sports", ... } } with one section key for every number from 1 to ${items.length}.`,
+    maxTokens: 1800,
     temperature: 0,
-    order: ['gemini', 'groq', 'claude'],
+    order: ['groq', 'gemini', 'claude'],
     fast: true,
     timeoutMs: 9000,
     validate: (d) => {
-      if (!Array.isArray(d?.labels) || d.labels.length !== items.length) throw new Error('label count mismatch')
+      const n = d?.labels && typeof d.labels === 'object' ? Object.keys(d.labels).length : 0
+      if (n < items.length * 0.8) throw new Error('too few labels')
     },
   })
   items.forEach((it, i) => {
-    const key = String(data.labels[i] || '').toLowerCase().trim()
+    const key = String(data.labels[String(i + 1)] || '').toLowerCase().trim()
     if (REAL_KEYS.includes(key)) cache.set(norm(it.text), key)
   })
 }
@@ -110,7 +111,7 @@ export async function classifyAll(items: ClassifyInput[], opts: ClassifyOptions 
   if (todo.length === 0) return resolve()
 
   const chunks: ClassifyInput[][] = []
-  for (let i = 0; i < todo.length; i += 100) chunks.push(todo.slice(i, i + 100))
+  for (let i = 0; i < todo.length; i += 60) chunks.push(todo.slice(i, i + 60))
   // A few chunks at a time keeps us under provider rate limits
   const work = (async () => {
     for (let i = 0; i < chunks.length; i += 2) {

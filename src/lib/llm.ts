@@ -26,7 +26,8 @@ const GEMINI_MODELS = process.env.GEMINI_MODEL
   ? [process.env.GEMINI_MODEL]
   : ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.8-flash']
 const GEMINI_FAST = process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : ['gemini-3.1-flash-lite', 'gemini-3.5-flash']
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+// Groq retires models too; these are the ones the key can use today. gpt-oss-120b is strongest, 20b is the quick fallback.
+const GROQ_MODELS = process.env.GROQ_MODEL ? [process.env.GROQ_MODEL] : ['openai/gpt-oss-120b', 'openai/gpt-oss-20b']
 
 const TIMEOUT_MS = 45_000
 const cooldown = new Map<Provider, number>()
@@ -151,26 +152,40 @@ async function callGemini(o: GenerateOptions, deadline: number): Promise<string>
 }
 
 async function callGroq(o: GenerateOptions, deadline: number): Promise<string> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(Math.floor(Math.max(3000, deadline - Date.now()))),
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      temperature: o.temperature ?? 0.2,
-      max_tokens: Math.min(o.maxTokens ?? 4096, 8000),
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: `${o.system}\n\nReturn a single JSON object.` },
-        { role: 'user', content: o.prompt },
-      ],
-    }),
-  })
-  if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`)
-  const data = await res.json()
-  const text = data?.choices?.[0]?.message?.content
-  if (!text) throw new Error('Empty Groq response')
-  return text
+  let lastError = 'no model tried'
+  for (const model of GROQ_MODELS) {
+    if ((modelCooldown.get(model) ?? 0) > Date.now()) continue
+    const remaining = deadline - Date.now()
+    if (remaining < 1500) break
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(Math.floor(remaining)),
+      body: JSON.stringify({
+        model,
+        temperature: o.temperature ?? 0.2,
+        max_tokens: Math.min((o.maxTokens ?? 4096) + 1500, 8000), // gpt-oss spends some tokens thinking first
+        ...(model.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {}),
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: `${o.system}\n\nReturn a single JSON object.` },
+          { role: 'user', content: o.prompt },
+        ],
+      }),
+    }).catch((e) => ({ ok: false, status: 0, text: async () => String(e), json: async () => ({}) }) as unknown as Response)
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      lastError = `Groq ${model} ${res.status}: ${body.slice(0, 160)}`
+      if (res.status === 401) throw new Error(lastError) // bad key: let the provider-level cooldown handle it
+      modelCooldown.set(model, Date.now() + (res.status === 429 ? 20_000 : 60_000))
+      continue
+    }
+    const data = await res.json()
+    const text = data?.choices?.[0]?.message?.content
+    if (text) return text
+    lastError = `Empty Groq response from ${model}`
+  }
+  throw new Error(lastError)
 }
 
 const CALLERS: Record<Provider, (o: GenerateOptions, deadline: number) => Promise<string>> = {
@@ -188,7 +203,7 @@ export async function generateJSON<T = any>(options: GenerateOptions): Promise<{
   }
   const deadline = Date.now() + (options.timeoutMs ?? TIMEOUT_MS)
   const have = new Set(availableProviders())
-  const wanted = (options.order || ['claude', 'gemini', 'groq']).filter((p) => have.has(p))
+  const wanted = (options.order || ['groq', 'gemini', 'claude']).filter((p) => have.has(p))
   let order = wanted.filter((p) => (cooldown.get(p) ?? 0) < Date.now())
   if (order.length === 0 && wanted.length > 0) {
     // Everything is cooling down; if the soonest one is back shortly, wait for it instead of failing

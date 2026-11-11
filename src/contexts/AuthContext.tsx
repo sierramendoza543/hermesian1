@@ -10,7 +10,7 @@ import {
   signOut,
   onIdTokenChanged,
 } from 'firebase/auth'
-import { auth } from '@/lib/firebase/config'
+import { auth, firebaseConfigured } from '@/lib/firebase/config'
 import { ensureUserProfile } from '@/lib/firebase/userData'
 
 interface AuthContextType {
@@ -53,9 +53,9 @@ export function friendlyAuthError(error: unknown): string {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(Boolean(auth))
+  const [loading, setLoading] = useState(firebaseConfigured)
   const [, setTick] = useState(0) // forces consumers to re-render after in-place profile updates
-  const authAvailable = Boolean(auth)
+  const authAvailable = firebaseConfigured
 
   useEffect(() => {
     if (!auth) {

@@ -31,4 +31,7 @@ if (auth) {
     })
 }
 
-export { app, auth, db } 
+// True on server and browser alike (the settings are baked in at build time), so pages render the same both places
+const firebaseConfigured = hasFirebaseConfig
+
+export { app, auth, db, firebaseConfigured } 
