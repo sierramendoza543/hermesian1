@@ -2,120 +2,69 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
+import { friendlyAuthError, useAuth } from '@/contexts/AuthContext'
+import AuthShell from '@/components/ui/AuthShell'
+import Notice from '@/components/ui/Notice'
 
 export default function SignUpPage() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signUp } = useAuth()
+  const { signUp, authAvailable } = useAuth()
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (password !== confirmPassword) {
-      return setError('Passwords do not match')
-    }
-
+    setError('')
+    if (password.length < 6) return setError('Choose a password with at least 6 characters.')
+    if (password !== confirm) return setError('Passwords do not match.')
+    setLoading(true)
     try {
-      setError('')
-      setLoading(true)
-      await signUp(email, password)
-      router.push('/')
-    } catch (error) {
-      setError('Failed to create an account')
-      console.error(error)
+      await signUp(email, password, name)
+      router.push('/profile')
+    } catch (err) {
+      setError(friendlyAuthError(err))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <AuthShell
+      title="Create your account"
+      subtitle="Free. Save stories, analyses and scores, and build a reading streak."
+      footer={<>Already have an account? <Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link></>}
+    >
+      {!authAvailable && <div className="mb-4"><Notice tone="warn">Accounts aren&apos;t configured on this deployment yet.</Notice></div>}
+      <form onSubmit={submit} className="space-y-4">
+        {error && <Notice tone="error">{error}</Notice>}
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
+          <label htmlFor="name" className="label-mono mb-1.5 block">Display name</label>
+          <input id="name" required maxLength={40} autoComplete="name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex Rivera" />
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
-            <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Confirm Password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm Password"
-              />
-            </div>
-          </div>
-
+        <div>
+          <label htmlFor="email" className="label-mono mb-1.5 block">Email</label>
+          <input id="email" type="email" required autoComplete="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-            >
-              {loading ? 'Creating account...' : 'Sign up'}
-            </button>
+            <label htmlFor="password" className="label-mono mb-1.5 block">Password</label>
+            <input id="password" type="password" required autoComplete="new-password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-
-          <div className="text-sm text-center">
-            <Link 
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Already have an account? Sign in
-            </Link>
+          <div>
+            <label htmlFor="confirm" className="label-mono mb-1.5 block">Confirm</label>
+            <input id="confirm" type="password" required autoComplete="new-password" className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <button type="submit" disabled={loading || !authAvailable} className="btn-primary w-full">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />} Create account
+        </button>
+      </form>
+    </AuthShell>
   )
-} 
+}

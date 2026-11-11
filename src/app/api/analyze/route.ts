@@ -1,273 +1,113 @@
 import { NextResponse } from 'next/server'
-import { analyzeArticleWithGemini } from '@/services/gemini'
-import { analyzeArticleWithGroq } from '@/services/groq'
-import { assertPublicHttpUrl, rateLimited } from '@/lib/apiGuard'
+import { rateLimited, sanitizeShortText } from '@/lib/apiGuard'
+import { BlockedError, fetchArticle, resolveGoogleNewsUrl } from '@/lib/extract'
+import { buildHighlights, computeTextStats, MAX_ANALYZED_CHARS, runAnalysis, AnalysisResult } from '@/lib/analysis'
+import { domainOf, leanLabel, lookupOutlet } from '@/lib/outlets'
 
-const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY
-const NEWS_API_URL = 'https://newsapi.org/v2/everything'
+export const maxDuration = 60
 
-function decodeEntities(text: string) {
-  return text
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-}
+const MIN_CHARS = 400
+const MAX_INPUT_CHARS = 60_000
 
-async function fetchHtmlFollow(url: string): Promise<{ finalUrl: string; html: string }> {
-  // Follow redirects manually so every hop is checked against the SSRF guard
-  let current = url
-  for (let hop = 0; hop < 5; hop++) {
-    await assertPublicHttpUrl(current)
-    const res = await fetch(current, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hermesian/1.0)' },
-      redirect: 'manual',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(10_000)
-    })
-    const location = res.headers.get('location')
-    if (res.status >= 300 && res.status < 400 && location) {
-      current = new URL(location, current).toString()
-      continue
-    }
-    const html = (await res.text()).slice(0, 2_000_000)
-    return { finalUrl: current, html }
-  }
-  throw new Error('Too many redirects')
-}
-
-function extractFromJsonLd(html: string): { title?: string; articleBody?: string; description?: string } | null {
-  try {
-    const scripts = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi) || []
-    for (const s of scripts) {
-      const jsonTextMatch = s.match(/<script[^>]*>([\s\S]*?)<\/script>/i)
-      if (!jsonTextMatch) continue
-      const text = jsonTextMatch[1]
-      const candidates: any[] = []
-      try {
-        const parsed = JSON.parse(text)
-        if (Array.isArray(parsed)) candidates.push(...parsed)
-        else candidates.push(parsed)
-      } catch { continue }
-      for (const node of candidates) {
-        const type = (node['@type'] || node.type || '').toString().toLowerCase()
-        if (type.includes('article') || node.articleBody || node.headline) {
-          return {
-            title: node.headline || node.name,
-            articleBody: node.articleBody,
-            description: node.description
-          }
-        }
-      }
-    }
-  } catch {}
-  return null
-}
-
-async function resolveGoogleNews(url: string, html: string): Promise<string | null> {
-  try {
-    const m = html.match(/<a[^>]+href="(https?:[^"#]+)"[^>]*>(?:[^<]*)<\/a>/i)
-    if (m && m[1]) return m[1]
-    const c = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["'](https?:[^"']+)["']/i)
-    if (c && c[1]) return c[1]
-    const og = html.match(/<meta[^>]+property=["']og:url["'][^>]+content=["'](https?:[^"']+)["']/i)
-    if (og && og[1]) return og[1]
-  } catch {}
-  return null
-}
-
-async function fetchArticleText(url: string): Promise<{ title?: string; text: string; resolvedUrl: string }> {
-  let { finalUrl, html } = await fetchHtmlFollow(url)
-
-  // Try to resolve Google News intermediary links
-  if (/news\.google\.com/.test(new URL(finalUrl).hostname)) {
-    const redirected = await resolveGoogleNews(finalUrl, html)
-    if (redirected) {
-      const follow = await fetchHtmlFollow(redirected)
-      finalUrl = follow.finalUrl
-      html = follow.html
-    }
-  }
-
-  // Strip scripts/styles
-  const noScripts = html.replace(/<script[\s\S]*?<\/script>/gi, '')
-  const noStyles = noScripts.replace(/<style[\s\S]*?<\/style>/gi, '')
-
-  // Extract title
-  const titleMatch = noStyles.match(/<title>([\s\S]*?)<\/title>/i)
-  const title = titleMatch ? titleMatch[1].trim() : undefined
-
-  // JSON-LD fallback
-  const jsonLd = extractFromJsonLd(noStyles)
-
-  // Heuristic main content extraction
-  const bodyMatch = noStyles.match(/<body[\s\S]*?>([\s\S]*?)<\/body>/i)
-  const bodyHtml = bodyMatch ? bodyMatch[1] : noStyles
-  const articleMatch = bodyHtml.match(/<article[\s\S]*?>([\s\S]*?)<\/article>/i)
-  const mainHtml = articleMatch ? articleMatch[1] : bodyHtml
-  const keepBlocks = mainHtml
-    .replace(/<(header|footer|nav|aside)[\s\S]*?<\/\1>/gi, '')
-    .replace(/<(h1|h2|h3|h4|p|li|blockquote)([^>]*)>/gi, '\n')
-    .replace(/<br\s*\/?>(\s*<br\s*\/?>)*/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-  let text = decodeEntities(keepBlocks)
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .replace(/\t+/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-
-  if (!text || text.length < 300) {
-    const metaDescMatch = noStyles.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
-    const metaDesc = metaDescMatch ? decodeEntities(metaDescMatch[1]) : undefined
-    if (jsonLd?.articleBody && jsonLd.articleBody.length > (text?.length || 0)) {
-      text = jsonLd.articleBody
-    } else if (metaDesc && metaDesc.length > (text?.length || 0)) {
-      text = metaDesc
-    } else if (jsonLd?.description && (jsonLd.description.length > (text?.length || 0))) {
-      text = jsonLd.description
-    }
-  }
-
-  const finalTitle = jsonLd?.title || title
-  return { title: finalTitle, text, resolvedUrl: finalUrl }
-}
-
-export async function GET(request: Request) {
-  if (rateLimited(request, 'analyze', 10)) {
-    return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 })
-  }
-  try {
-    const { searchParams } = new URL(request.url)
-    const headline = (searchParams.get('headline') || '').trim()
-    const url = searchParams.get('url')
-
-    if (headline) {
-      if (!NEWS_API_KEY) {
-        return NextResponse.json({ success: false, error: 'Missing NewsAPI key' }, { status: 500 })
-      }
-      const apiUrl = `${NEWS_API_URL}?q=${encodeURIComponent(headline)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`
-      const res = await fetch(apiUrl, { cache: 'no-store' })
-      const data = await res.json()
-      if (!res.ok) {
-        return NextResponse.json({ success: false, error: data?.message || 'NewsAPI error' }, { status: res.status })
-      }
-      const items: Array<{ id: string; title: string; description: string; content: string; url: string; source: string; publishedAt: string }> = ((data.articles || []) as any[]).map((a: any) => ({
-        id: a.url,
-        title: a.title,
-        description: a.description || '',
-        content: a.content || '',
-        url: a.url,
-        source: a.source?.name || 'Unknown',
-        publishedAt: a.publishedAt,
-      }))
-
-      const normalized = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-      const best = items.find((a) => normalized(a.title) === normalized(headline)) || items[0]
-
-      if (!best) {
-        return NextResponse.json({ success: false, suggestions: [], error: 'No NewsAPI results' }, { status: 404 })
-      }
-
-      const combinedText = [best.title, best.description, best.content].filter(Boolean).join('\n\n')
-      if (!combinedText || combinedText.length < 60) {
-        return NextResponse.json({ success: false, suggestions: items.slice(0, 8) }, { status: 200 })
-      }
-
-      const analysis = process.env.GROQ_API_KEY
-        ? await analyzeArticleWithGroq({ url: best.url, title: best.title, text: combinedText })
-        : await analyzeArticleWithGemini({ url: best.url, title: best.title, text: combinedText })
-      return NextResponse.json({ success: true, analysis })
-    }
-
-    if (!url) {
-      return NextResponse.json({ error: 'Missing headline or url' }, { status: 400 })
-    }
-    const { title, text, resolvedUrl } = await fetchArticleText(url)
-    if (!text || text.length < 100) {
-      return NextResponse.json({ error: 'Failed to extract article text from source' }, { status: 422 })
-    }
-    const analysis = process.env.GROQ_API_KEY
-      ? await analyzeArticleWithGroq({ url: resolvedUrl || url, title, text })
-      : await analyzeArticleWithGemini({ url: resolvedUrl || url, title, text })
-    return NextResponse.json({ success: true, analysis })
-  } catch (error: any) {
-    console.error('Analyze API error:', error)
-    return NextResponse.json({ success: false, error: error?.message || 'Failed to analyze article' }, { status: 500 })
-  }
+function fail(error: string, status: number, extra: Record<string, unknown> = {}) {
+  return NextResponse.json({ error, ...extra }, { status })
 }
 
 export async function POST(request: Request) {
-  if (rateLimited(request, 'analyze', 10)) {
-    return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 })
+  if (rateLimited(request, 'analyze', 8)) {
+    return fail('Too many analyses in a short time — wait a minute and try again.', 429)
   }
+
+  let body: any
   try {
-    const body = await request.json()
-    const headline: string | undefined = body?.headline
-    const url: string | undefined = body?.url
-    const article: { title?: string; description?: string; content?: string; url?: string } | undefined = body?.article
+    body = await request.json()
+  } catch {
+    return fail('Invalid request.', 400)
+  }
 
-    if (article?.url) {
-      const text = [article.title, article.description, article.content].filter(Boolean).join('\n\n')
-      if (!text || text.length < 60) {
-        return NextResponse.json({ success: false, error: 'Insufficient article text' }, { status: 422 })
-      }
-      const analysis = process.env.GROQ_API_KEY
-        ? await analyzeArticleWithGroq({ url: article.url!, title: article.title || '', text })
-        : await analyzeArticleWithGemini({ url: article.url!, title: article.title || '', text })
-      return NextResponse.json({ success: true, analysis })
-    }
+  let title = sanitizeShortText(body?.title, 300)
+  let source = sanitizeShortText(body?.source, 100)
+  let url = typeof body?.url === 'string' ? body.url.trim().slice(0, 2000) : ''
+  let text = typeof body?.text === 'string' ? body.text : ''
 
-    if (headline) {
-      if (!NEWS_API_KEY) {
-        return NextResponse.json({ success: false, error: 'Missing NewsAPI key' }, { status: 500 })
+  try {
+    if (!text && url) {
+      if (!/^https?:\/\//i.test(url)) return fail('Enter a full link starting with http:// or https://', 400)
+      try {
+        const article = await fetchArticle(url)
+        text = article.text
+        url = article.url
+        title = article.title || title
+        source = article.siteName || source
+        if (article.paywalled || text.length < MIN_CHARS) {
+          return fail(
+            `${source || 'This outlet'} only shows part of this article to automated readers (paywall or login wall). Paste the article text below and we'll analyze it.`,
+            422,
+            { needsText: true, title, source }
+          )
+        }
+      } catch (err) {
+        const blocked = err instanceof BlockedError
+        const msg = blocked
+          ? `${source || 'This outlet'} blocks automated reading of its articles. Google News only gives us the headline and link, not the text.`
+          : err instanceof Error
+          ? err.message
+          : 'Could not fetch the article.'
+        return fail(`${msg} Paste the article text below and we'll analyze it.`, 422, { needsText: true, title, source })
       }
-      const apiUrl = `${NEWS_API_URL}?q=${encodeURIComponent(headline)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`
-      const res = await fetch(apiUrl, { cache: 'no-store' })
-      const data = await res.json()
-      if (!res.ok) {
-        return NextResponse.json({ success: false, error: data?.message || 'NewsAPI error' }, { status: res.status })
-      }
-      const items: Array<{ id: string; title: string; description: string; content: string; url: string; source: string; publishedAt: string }> = ((data.articles || []) as any[]).map((a: any) => ({
-        id: a.url,
-        title: a.title,
-        description: a.description || '',
-        content: a.content || '',
-        url: a.url,
-        source: a.source?.name || 'Unknown',
-        publishedAt: a.publishedAt,
-      }))
-      const normalized = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-      const best = items.find((a) => normalized(a.title) === normalized(headline)) || items[0]
-      if (!best) {
-        return NextResponse.json({ success: false, suggestions: [], error: 'No NewsAPI results' }, { status: 404 })
-      }
-      const combinedText = [best.title, best.description, best.content].filter(Boolean).join('\n\n')
-      if (!combinedText || combinedText.length < 60) {
-        return NextResponse.json({ success: false, suggestions: items.slice(0, 8) }, { status: 200 })
-      }
-      const analysis = process.env.GROQ_API_KEY
-        ? await analyzeArticleWithGroq({ url: best.url, title: best.title, text: combinedText })
-        : await analyzeArticleWithGemini({ url: best.url, title: best.title, text: combinedText })
-      return NextResponse.json({ success: true, analysis })
     }
 
-    if (!url) {
-      return NextResponse.json({ error: 'Missing headline or url' }, { status: 400 })
+    text = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+    if (!text) return fail('Provide a link or paste some article text.', 400)
+    if (text.length < MIN_CHARS) return fail('That\'s too short to analyze reliably — paste at least a few paragraphs.', 400)
+    text = text.slice(0, MAX_INPUT_CHARS)
+
+    if (url) url = await resolveGoogleNewsUrl(url)
+    const domain = domainOf(url)
+    const outletRaw = lookupOutlet(source, url)
+    const analyzedText = text.slice(0, MAX_ANALYZED_CHARS)
+
+    const stats = computeTextStats(analyzedText)
+
+    let analysis = null
+    let provider: string | null = null
+    let aiError: string | null = null
+    let verification = { requested: 0, verified: 0 }
+    try {
+      const result = await runAnalysis({ title, source: outletRaw?.name || source, text })
+      analysis = result.analysis
+      provider = result.provider
+      verification = result.verification
+    } catch (err) {
+      aiError = err instanceof Error ? err.message : 'AI analysis failed'
+      console.error('Analysis AI error:', aiError.slice(0, 300))
     }
-    const { title, text, resolvedUrl } = await fetchArticleText(url)
-    if (!text || text.length < 100) {
-      return NextResponse.json({ error: 'Failed to extract article text from source' }, { status: 422 })
+
+    const payload: AnalysisResult = {
+      mode: analysis ? 'ai' : 'data-only',
+      provider,
+      aiError: aiError ? 'The AI analysis service is unavailable right now, so this report shows measurements only.' : null,
+      article: {
+        title: title || 'Pasted article',
+        url,
+        source: outletRaw?.name || source,
+        domain: outletRaw?.domain || domain,
+        text: analyzedText,
+        totalWords: text.split(/\s+/).filter(Boolean).length,
+        truncated: text.length > MAX_ANALYZED_CHARS,
+      },
+      outlet: outletRaw
+        ? { name: outletRaw.name, lean: outletRaw.lean, label: leanLabel(outletRaw.lean), reliability: outletRaw.reliability }
+        : null,
+      stats,
+      analysis,
+      highlights: buildHighlights(analyzedText, analysis),
+      verification,
+      generatedAt: new Date().toISOString(),
     }
-    const analysis = process.env.GROQ_API_KEY
-      ? await analyzeArticleWithGroq({ url: resolvedUrl || url, title, text })
-      : await analyzeArticleWithGemini({ url: resolvedUrl || url, title, text })
-    return NextResponse.json({ success: true, analysis })
-  } catch (error: any) {
+    return NextResponse.json(payload)
+  } catch (error) {
     console.error('Analyze API error:', error)
-    return NextResponse.json({ success: false, error: error?.message || 'Failed to analyze article' }, { status: 500 })
+    return fail('Something went wrong analyzing that article.', 500)
   }
 }
-
-

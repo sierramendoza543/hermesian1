@@ -116,16 +116,26 @@ export default function LearnPage() {
           </DisclosureCard>
         </section>
 
-        {/* Back to Home Link */}
-        <div className="mt-12 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center text-primary hover:underline"
-          >
-            <ArrowLeft className="mr-2" size={16} />
-            Back to Home
-          </Link>
-        </div>
+        {/* Practice */}
+        <section className="mt-14">
+          <h2 className="mb-5 font-headline text-2xl font-bold">Put it into practice</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link href="/analyze" className="card p-5 transition hover:shadow-lift">
+              <p className="font-headline font-bold">Bias X-ray</p>
+              <p className="mt-1 text-sm text-muted">Analyze a real article for lean, loaded language and fallacies.</p>
+            </Link>
+            <Link href="/games/bias" className="card p-5 transition hover:shadow-lift">
+              <p className="font-headline font-bold">Spot the Bias</p>
+              <p className="mt-1 text-sm text-muted">Train your eye on real headlines from across the spectrum.</p>
+            </Link>
+          </div>
+          <div className="mt-10 text-center">
+            <Link href="/" className="inline-flex items-center text-primary hover:underline">
+              <ArrowLeft className="mr-2" size={16} />
+              Back to stories
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );

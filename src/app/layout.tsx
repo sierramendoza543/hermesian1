@@ -1,43 +1,39 @@
+import type { Metadata, Viewport } from 'next'
+import { Inter, Merriweather } from 'next/font/google'
 import RootLayoutContent from '@/components/layout/RootLayoutContent'
-import { DebateProvider } from '@/contexts/DebateContext'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { AppProvider } from '@/contexts/AppContext'
 import '../styles/globals.css'
 
-export const metadata = {
-  title: 'Hermesian - Media Literacy Platform',
-  description: 'Stay informed with news stories and scroll feed',
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+  variable: '--font-merriweather',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: { default: 'Hermesian — See every side of the story', template: '%s | Hermesian' },
+  description:
+    'Hermesian groups coverage from dozens of outlets into single stories, maps them on the political spectrum, and uses AI to expose bias with quotes and evidence.',
+  icons: {
+    icon: '/images/Hermesian%20icon%20200x200%20%282%29.png',
+    apple: '/images/Hermesian%20icon%20200x200%20%282%29.png',
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#1c1620',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta
-          name="format-detection"
-          content="telephone=no, date=no, email=no, address=no"
-        />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet" />
-        <link rel="icon" href="/images/Hermesian%20icon%20200x200%20%282%29.png" />
-        <link rel="apple-touch-icon" href="/images/Hermesian%20icon%20200x200%20%282%29.png" />
-      </head>
-      <body className="bg-accent">
+    <html lang="en" className={`${inter.variable} ${merriweather.variable}`}>
+      <body className="min-h-screen bg-paper font-sans text-ink">
         <AuthProvider>
-          <DebateProvider>
-            <AppProvider>
-              <RootLayoutContent>
-                {children}
-              </RootLayoutContent>
-            </AppProvider>
-          </DebateProvider>
+          <RootLayoutContent>{children}</RootLayoutContent>
         </AuthProvider>
       </body>
     </html>

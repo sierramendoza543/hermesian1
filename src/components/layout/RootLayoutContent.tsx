@@ -1,21 +1,17 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import Navbar from '@/components/Navbar'
-import { Inter } from 'next/font/google'
+import Footer from '@/components/layout/Footer'
 
-const inter = Inter({ subsets: ['latin'] })
-
-export default function RootLayoutContent({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const immersive = pathname === '/scroll-feed'
   return (
-    <div className={inter.className}>
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="min-h-screen">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
+      {!immersive && <Footer />}
     </div>
   )
-} 
+}
