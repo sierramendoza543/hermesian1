@@ -27,7 +27,7 @@ export default function GamesHub() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <p className="label-mono">Games</p>
       <h1 className="mt-2 font-headline text-3xl font-black md:text-4xl">Play the news</h1>
-      <p className="mt-2 text-muted">Quick games, rebuilt from today&apos;s headlines.</p>
+      <p className="mt-2 text-dim">Quick games, rebuilt from today&apos;s headlines.</p>
 
       <div className="mt-7 grid gap-5 md:grid-cols-3">
         {(Object.keys(GAMES) as GameKey[]).map((k) => {
@@ -40,7 +40,7 @@ export default function GamesHub() {
               <div className="p-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl text-white" style={{ background: g.color }}><Icon className="h-6 w-6" /></span>
                 <h2 className="mt-4 font-headline text-xl font-bold">{g.title}</h2>
-                <p className="mt-1 text-sm text-muted">{g.tagline}</p>
+                <p className="mt-1 text-sm text-dim">{g.tagline}</p>
                 <p className="mt-4 text-sm font-semibold" style={{ color: g.color }}>Play →</p>
               </div>
             </Link>

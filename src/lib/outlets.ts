@@ -19,7 +19,7 @@ export interface Outlet {
 }
 
 export const OUTLET_DISCLAIMER =
-  'Outlet positions are approximate editorial-lean ratings synthesized from public media-bias projects (AllSides, Ad Fontes Media, Media Bias/Fact Check). They are simplified, debated, and describe an outlet\'s typical lean — not any single article.'
+  'Outlet positions are approximate editorial-lean ratings synthesized from public media-bias projects (AllSides, Ad Fontes Media, Media Bias/Fact Check). They are simplified, debated, and describe an outlet\'s typical lean - not any single article.'
 
 export const BUCKET_META: Record<LeanBucket, { label: string; short: string; color: string; range: [number, number] }> = {
   left: { label: 'Left', short: 'L', color: '#1d4ed8', range: [-100, -60] },

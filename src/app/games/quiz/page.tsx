@@ -24,7 +24,7 @@ function StoryPicker() {
   }, [])
   return (
     <div>
-      <p className="mb-4 text-muted">Pick a story:</p>
+      <p className="mb-4 text-dim">Pick a story:</p>
       {error && <Notice tone="error">{error}</Notice>}
       {!stories && !error && <div className="space-y-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}</div>}
       <div className="space-y-3">
@@ -38,7 +38,7 @@ function StoryPicker() {
             {i < 3 && <span className="label-mono rounded bg-accent px-2 py-1 !text-primary">Daily #{i + 1}</span>}
             <div className="flex-1">
               <p className="font-headline font-bold leading-snug">{s.headline}</p>
-              <p className="mt-0.5 text-xs text-muted">{s.category} · {s.sourceCount} outlets · {timeAgo(s.publishedAt)}</p>
+              <p className="mt-0.5 text-xs text-dim">{s.category} · {s.sourceCount} outlets · {timeAgo(s.publishedAt)}</p>
             </div>
           </Link>
         ))}
@@ -119,7 +119,7 @@ function GameContent() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-primary">
+      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-dim hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> All games
       </Link>
       <header className="mb-6 mt-4">
@@ -135,7 +135,7 @@ function GameContent() {
         <div className="space-y-4" aria-live="polite">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-64 w-full" />
-          <p className="flex items-center justify-center gap-2 text-sm text-muted"><Loader2 className="h-4 w-4 animate-spin" /> Building your quiz…</p>
+          <p className="flex items-center justify-center gap-2 text-sm text-dim"><Loader2 className="h-4 w-4 animate-spin" /> Building your quiz…</p>
         </div>
       )}
 
@@ -150,7 +150,7 @@ function GameContent() {
         <>
           {!aiUsed && (
             <div className="mb-5">
-              <Notice tone="info">AI question-writer is offline — these questions come straight from real headlines.</Notice>
+              <Notice tone="info">AI question-writer is offline - these questions come straight from real headlines.</Notice>
             </div>
           )}
           <GameRunner
@@ -162,7 +162,7 @@ function GameContent() {
               load()
             }}
             footer={
-              <p className="mt-3 text-xs text-muted">
+              <p className="mt-3 text-xs text-dim">
                 {user ? (
                   saved === 'saving' ? 'Saving your score…' : saved === 'done' ? <span className="inline-flex items-center gap-1 text-emerald-700"><Check className="h-3.5 w-3.5" /> Score saved to your profile</span> : saved === 'failed' ? 'Could not save your score.' : ''
                 ) : (

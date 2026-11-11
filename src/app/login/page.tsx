@@ -41,7 +41,7 @@ function LoginForm() {
     if (!email.trim()) return setError('Enter your email above first, then click “Forgot password?”.')
     try {
       await resetPassword(email)
-      setInfo('Password reset email sent — check your inbox (and spam).')
+      setInfo('Password reset email sent - check your inbox (and spam).')
     } catch (err) {
       setError(friendlyAuthError(err))
     }

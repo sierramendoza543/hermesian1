@@ -177,14 +177,14 @@ export default function SortGame() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-6">
-      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-primary">
+      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-dim hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Games
       </Link>
       <header className="mt-3 text-center">
         <h1 className="font-headline text-3xl font-black">Story Sort</h1>
-        <p className="mt-1 text-sm text-muted">Four news stories, sixteen words. Group the words by story.</p>
+        <p className="mt-1 text-sm text-dim">Four news stories, sixteen words. Group the words by story.</p>
         <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setRound(0) }} />
-        {mode === 'daily' && <p className="mt-2 text-xs text-muted">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
+        {mode === 'daily' && <p className="mt-2 text-xs text-dim">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
       </header>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
@@ -206,11 +206,11 @@ export default function SortGame() {
           </div>
 
           {!over && hintLevel >= 1 && (
-            <div className="mt-3 rounded-xl border border-line bg-white p-3">
+            <div className="mt-3 rounded-xl border border-sand bg-white p-3">
               <p className="label-mono mb-2">The four stories</p>
               <ul className="space-y-1.5">
                 {groups.map((g, i) => (
-                  <li key={g.storyId} className={`flex gap-2 text-sm leading-snug ${solved.includes(i) ? 'text-muted line-through' : ''}`}>
+                  <li key={g.storyId} className={`flex gap-2 text-sm leading-snug ${solved.includes(i) ? 'text-dim line-through' : ''}`}>
                     <span className={`mt-1 h-3 w-3 shrink-0 rounded ${COLORS[i].bg}`} />
                     {g.label}
                   </li>
@@ -227,19 +227,19 @@ export default function SortGame() {
                     key={w}
                     onClick={() => toggle(w)}
                     className={`flex h-16 items-center justify-center rounded-xl px-1 text-[11px] font-bold tracking-wide transition sm:h-20 sm:text-sm ${
-                      picked.includes(w) ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line hover:ring-primary'
+                      picked.includes(w) ? 'bg-charcoal text-white' : 'bg-white text-charcoal ring-1 ring-sand hover:ring-primary'
                     }`}
                   >
                     <span className="break-all">{w}</span>
                   </button>
                 ))}
-                {msg && <div className="absolute -top-8 left-1/2 -translate-x-1/2 animate-pop rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white">{msg}</div>}
+                {msg && <div className="absolute -top-8 left-1/2 -translate-x-1/2 animate-pop rounded-lg bg-charcoal px-3 py-1.5 text-xs font-semibold text-white">{msg}</div>}
               </div>
 
-              <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted">
+              <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-dim">
                 Mistakes left
                 {Array.from({ length: MAX_MISTAKES }).map((_, i) => (
-                  <span key={i} className={`h-3 w-3 rounded-full ${i < MAX_MISTAKES - mistakes ? 'bg-primary' : 'bg-line'}`} />
+                  <span key={i} className={`h-3 w-3 rounded-full ${i < MAX_MISTAKES - mistakes ? 'bg-primary' : 'bg-sand'}`} />
                 ))}
               </div>
 
@@ -255,7 +255,7 @@ export default function SortGame() {
           {over && (
             <div className="card mt-6 animate-rise p-5 text-center">
               <p className="font-headline text-2xl font-black">{won ? (mistakes === 0 ? 'Perfect!' : 'You sorted them all!') : `${solved.length}/4 stories sorted`}</p>
-              <p className="mt-1 text-sm text-muted">Tap a group above to read that story.</p>
+              <p className="mt-1 text-sm text-dim">Tap a group above to read that story.</p>
               <div className="mt-4 flex justify-center gap-2">
                 {mode === 'unlimited' ? (
                   <button onClick={() => setRound((r) => r + 1)} className="btn-primary !py-2"><RotateCcw className="h-4 w-4" /> New puzzle</button>
@@ -263,8 +263,8 @@ export default function SortGame() {
                   <button onClick={() => setMode('unlimited')} className="btn-primary !py-2">Play unlimited</button>
                 )}
               </div>
-              {mode === 'daily' && <p className="mt-3 text-xs text-muted">Next daily puzzle in <NextPuzzleCountdown /></p>}
-              <p className="mt-3 text-xs text-muted">
+              {mode === 'daily' && <p className="mt-3 text-xs text-dim">Next daily puzzle in <NextPuzzleCountdown /></p>}
+              <p className="mt-3 text-xs text-dim">
                 {user ? (saved ? 'Score saved to your profile.' : '') : <><Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link> to save scores.</>}
               </p>
             </div>

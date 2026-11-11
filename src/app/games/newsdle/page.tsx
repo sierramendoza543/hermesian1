@@ -48,8 +48,8 @@ const TILE: Record<Mark | 'empty' | 'typing', string> = {
   hit: 'border-emerald-600 bg-emerald-600 text-white',
   near: 'border-amber-500 bg-amber-500 text-white',
   miss: 'border-stone-500 bg-stone-500 text-white',
-  empty: 'border-line bg-white',
-  typing: 'border-ink bg-white',
+  empty: 'border-sand bg-white',
+  typing: 'border-charcoal bg-white',
 }
 
 function NewsdleGame() {
@@ -250,14 +250,14 @@ function NewsdleGame() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
-      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-primary">
+      <Link href="/games" className="inline-flex items-center gap-1.5 text-sm font-medium text-dim hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Games
       </Link>
       <header className="mt-3 text-center">
         <h1 className="font-headline text-3xl font-black">Newsdle</h1>
-        <p className="mt-1 text-sm text-muted">Guess the word that headlines keep using.</p>
+        <p className="mt-1 text-sm text-dim">Guess the word that headlines keep using.</p>
         <ModeSwitch mode={mode} onChange={(m) => { setMode(m); setRound(0) }} />
-        {mode === 'daily' && <p className="mt-2 text-xs text-muted">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
+        {mode === 'daily' && <p className="mt-2 text-xs text-dim">Daily puzzle · {dailyLabel()} · resets at midnight ET</p>}
       </header>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
@@ -265,7 +265,7 @@ function NewsdleGame() {
 
       {game && (
         <>
-          <div className="mt-5 rounded-xl border border-line bg-white p-3 text-center text-sm">
+          <div className="mt-5 rounded-xl border border-sand bg-white p-3 text-center text-sm">
             <p className="label-mono mb-1">Hint · {len} letters · used by {game.outlets} outlets</p>
             <p className="font-headline font-bold leading-snug">{game.hint}</p>
             {hintLevel >= 1 && <p className="mt-2 text-xs font-semibold text-primary">Category: {game.category}</p>}
@@ -278,7 +278,7 @@ function NewsdleGame() {
           </div>
 
           <div className="relative mt-5">
-            {toast && <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 animate-pop rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white">{toast}</div>}
+            {toast && <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 animate-pop rounded-lg bg-charcoal px-3 py-1.5 text-xs font-semibold text-white">{toast}</div>}
             <div className="mx-auto grid gap-1.5" style={{ maxWidth: Math.min(len * 58, 400) }}>
               {Array.from({ length: ROWS }).map((_, r) => {
                 const g = guesses[r]
@@ -303,7 +303,7 @@ function NewsdleGame() {
           {over ? (
             <div className="card mt-6 animate-rise p-5 text-center">
               <p className="font-headline text-2xl font-black">{won ? `Solved in ${guesses.length}/${ROWS}!` : `The word was ${word}`}</p>
-              <p className="mt-1 text-sm text-muted">From: {game.storyHeadline}</p>
+              <p className="mt-1 text-sm text-dim">From: {game.storyHeadline}</p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {mode === 'unlimited' && (
                   <button onClick={() => setRound((r) => r + 1)} className="btn-primary !py-2">Next word</button>
@@ -314,8 +314,8 @@ function NewsdleGame() {
                 <Link href={`/story/${game.storyId}`} className="btn-ghost !py-2">Read the story</Link>
                 <button onClick={share} className="btn-ghost !py-2">{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied' : 'Share'}</button>
               </div>
-              {mode === 'daily' && <p className="mt-3 text-xs text-muted">Next daily puzzle in <NextPuzzleCountdown /></p>}
-              <p className="mt-3 text-xs text-muted">
+              {mode === 'daily' && <p className="mt-3 text-xs text-dim">Next daily puzzle in <NextPuzzleCountdown /></p>}
+              <p className="mt-3 text-xs text-dim">
                 {user ? (saved ? 'Score saved to your profile.' : '') : <><Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link> to save scores.</>}
               </p>
             </div>
@@ -323,19 +323,19 @@ function NewsdleGame() {
             <div className="mt-6 select-none space-y-1.5">
               {KEYS.map((row, i) => (
                 <div key={row} className="flex justify-center gap-1">
-                  {i === 2 && <button onClick={() => press('ENTER')} className="h-12 rounded-md bg-ink px-3 text-xs font-bold text-white sm:px-4">ENTER</button>}
+                  {i === 2 && <button onClick={() => press('ENTER')} className="h-12 rounded-md bg-charcoal px-3 text-xs font-bold text-white sm:px-4">ENTER</button>}
                   {row.split('').map((k) => (
                     <button
                       key={k}
                       onClick={() => press(k)}
                       className={`h-12 min-w-0 flex-1 rounded-md text-sm font-bold transition sm:max-w-[40px] ${
-                        keyState[k] === 'hit' ? 'bg-emerald-600 text-white' : keyState[k] === 'near' ? 'bg-amber-500 text-white' : keyState[k] === 'miss' ? 'bg-stone-400 text-white' : 'bg-line hover:bg-secondary/50'
+                        keyState[k] === 'hit' ? 'bg-emerald-600 text-white' : keyState[k] === 'near' ? 'bg-amber-500 text-white' : keyState[k] === 'miss' ? 'bg-stone-400 text-white' : 'bg-sand hover:bg-secondary/50'
                       }`}
                     >
                       {k}
                     </button>
                   ))}
-                  {i === 2 && <button onClick={() => press('BACK')} className="flex h-12 items-center rounded-md bg-ink px-3 text-white sm:px-4" aria-label="Backspace"><Delete className="h-4 w-4" /></button>}
+                  {i === 2 && <button onClick={() => press('BACK')} className="flex h-12 items-center rounded-md bg-charcoal px-3 text-white sm:px-4" aria-label="Backspace"><Delete className="h-4 w-4" /></button>}
                 </div>
               ))}
             </div>

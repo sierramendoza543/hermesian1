@@ -85,15 +85,15 @@ export default function LearnPage() {
             </p>
             <blockquote className="border-l-4 border-primary pl-4 italic my-4">
               "If we don't act now, your children will inherit a world of chaos and destruction."
-              <span className="block text-sm text-gray-500 mt-2">— Fear Appeal</span>
+              <span className="block text-sm text-gray-500 mt-2">- Fear Appeal</span>
             </blockquote>
             <blockquote className="border-l-4 border-primary pl-4 italic my-4">
               "Join millions of happy customers who have already made the switch!"
-              <span className="block text-sm text-gray-500 mt-2">— Joy Appeal</span>
+              <span className="block text-sm text-gray-500 mt-2">- Joy Appeal</span>
             </blockquote>
             <blockquote className="border-l-4 border-primary pl-4 italic my-4">
               "They're taking away your rights and freedoms one by one!"
-              <span className="block text-sm text-gray-500 mt-2">— Anger Appeal</span>
+              <span className="block text-sm text-gray-500 mt-2">- Anger Appeal</span>
             </blockquote>
           </DisclosureCard>
 
@@ -122,11 +122,11 @@ export default function LearnPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Link href="/analyze" className="card p-5 transition hover:shadow-lift">
               <p className="font-headline font-bold">Bias X-ray</p>
-              <p className="mt-1 text-sm text-muted">Analyze a real article for lean, loaded language and fallacies.</p>
+              <p className="mt-1 text-sm text-dim">Analyze a real article for lean, loaded language and fallacies.</p>
             </Link>
             <Link href="/games/bias" className="card p-5 transition hover:shadow-lift">
               <p className="font-headline font-bold">Spot the Bias</p>
-              <p className="mt-1 text-sm text-muted">Train your eye on real headlines from across the spectrum.</p>
+              <p className="mt-1 text-sm text-dim">Train your eye on real headlines from across the spectrum.</p>
             </Link>
           </div>
           <div className="mt-10 text-center">

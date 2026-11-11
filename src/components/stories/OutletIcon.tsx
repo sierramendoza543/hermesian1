@@ -19,7 +19,7 @@ export default function OutletIcon({
   return (
     <span className="group/icon relative inline-flex" style={{ width: size, height: size }}>
       <span
-        className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-[11px] font-bold text-ink"
+        className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white text-[11px] font-bold text-charcoal"
         style={{ boxShadow: `0 0 0 2px ${ring}` }}
       >
         {domain && !failed ? (
@@ -37,7 +37,7 @@ export default function OutletIcon({
           name.slice(0, 2).toUpperCase()
         )}
       </span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-max max-w-[200px] -translate-x-1/2 rounded-lg bg-ink px-2.5 py-1.5 text-center text-xs font-semibold leading-snug text-white shadow-lift group-hover/icon:block">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-max max-w-[200px] -translate-x-1/2 rounded-lg bg-charcoal px-2.5 py-1.5 text-center text-xs font-semibold leading-snug text-white shadow-lift group-hover/icon:block">
         {name}
         {lean !== null && <span className="block text-[10px] font-normal opacity-70">{leanLabel(lean)}</span>}
       </span>

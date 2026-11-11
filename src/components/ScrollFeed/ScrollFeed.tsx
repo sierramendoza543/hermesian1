@@ -198,14 +198,14 @@ export default function ScrollFeed() {
   return (
     <div className="relative h-full text-white">
       {/* Top bar */}
-      <div className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-ink/90 to-transparent px-3 pb-5 pt-3 sm:px-5">
+      <div className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-charcoal/90 to-transparent px-3 pb-5 pt-3 sm:px-5">
         <div className="flex flex-1 gap-2 overflow-x-auto scrollbar-hide">
           {chips.map((c) => (
             <button
               key={c.key}
               onClick={() => setCategory(c.key)}
               className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
-                category === c.key ? 'border-white bg-white text-ink' : 'border-white/25 bg-ink/40 text-white/85 backdrop-blur hover:border-white/60'
+                category === c.key ? 'border-white bg-white text-charcoal' : 'border-white/25 bg-charcoal/40 text-white/85 backdrop-blur hover:border-white/60'
               }`}
             >
               {c.label}
@@ -214,7 +214,7 @@ export default function ScrollFeed() {
         </div>
         <button
           onClick={toggleMute}
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/25 bg-ink/40 px-3 py-1.5 text-xs font-semibold backdrop-blur hover:border-white/60"
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/25 bg-charcoal/40 px-3 py-1.5 text-xs font-semibold backdrop-blur hover:border-white/60"
           aria-label={muted ? 'Unmute' : 'Mute'}
         >
           {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -236,7 +236,7 @@ export default function ScrollFeed() {
           <div>
             <p className="font-headline text-xl font-bold">Videos are unavailable right now</p>
             <p className="mt-2 text-sm text-white/60">{error}</p>
-            <button onClick={() => fetchPage(category, true)} className="btn mt-5 bg-white text-ink hover:bg-accent"><RefreshCw className="h-4 w-4" /> Try again</button>
+            <button onClick={() => fetchPage(category, true)} className="btn mt-5 bg-white text-charcoal hover:bg-accent"><RefreshCw className="h-4 w-4" /> Try again</button>
           </div>
         </div>
       )}
@@ -263,7 +263,7 @@ export default function ScrollFeed() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={v.thumbnail} alt="" loading={Math.abs(i - active) <= 1 ? 'eager' : 'lazy'} className="h-full w-full object-cover opacity-80" />
                       <span className="absolute inset-0 flex items-center justify-center">
-                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-ink"><Play className="ml-1 h-7 w-7" /></span>
+                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-charcoal"><Play className="ml-1 h-7 w-7" /></span>
                       </span>
                     </button>
                   )}
@@ -290,19 +290,19 @@ export default function ScrollFeed() {
                 <div className="absolute bottom-24 right-2 z-10 flex flex-col items-center gap-3 sm:static sm:justify-end sm:pb-6">
                   <Link
                     href={`/?q=${encodeURIComponent(searchQuery(v.title))}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/70 backdrop-blur hover:bg-primary sm:bg-white/10"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-charcoal/70 backdrop-blur hover:bg-primary sm:bg-white/10"
                     aria-label="Find full coverage" title="Find full coverage"
                   >
                     <Newspaper className="h-5 w-5" />
                   </Link>
                   <a
                     href={`https://www.youtube.com/shorts/${v.id}`} target="_blank" rel="noopener noreferrer"
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/70 backdrop-blur hover:bg-primary sm:bg-white/10"
+                    className="flex h-11 w-11 items-center justify-center rounded-full bg-charcoal/70 backdrop-blur hover:bg-primary sm:bg-white/10"
                     aria-label="Open on YouTube" title="Open on YouTube"
                   >
                     <ExternalLink className="h-5 w-5" />
                   </a>
-                  <button onClick={toggleMute} className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/70 backdrop-blur hover:bg-primary sm:bg-white/10" aria-label={muted ? 'Unmute' : 'Mute'}>
+                  <button onClick={toggleMute} className="flex h-11 w-11 items-center justify-center rounded-full bg-charcoal/70 backdrop-blur hover:bg-primary sm:bg-white/10" aria-label={muted ? 'Unmute' : 'Mute'}>
                     {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                   </button>
                 </div>
@@ -320,8 +320,8 @@ export default function ScrollFeed() {
       {/* Up / down (desktop) */}
       {videos.length > 0 && (
         <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2 lg:flex">
-          <button onClick={() => go(Math.max(active - 1, 0))} disabled={active === 0} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-ink/60 backdrop-blur hover:border-white disabled:opacity-30" aria-label="Previous"><ChevronUp className="h-5 w-5" /></button>
-          <button onClick={() => go(Math.min(active + 1, videos.length - 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-ink/60 backdrop-blur hover:border-white" aria-label="Next"><ChevronDown className="h-5 w-5" /></button>
+          <button onClick={() => go(Math.max(active - 1, 0))} disabled={active === 0} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-charcoal/60 backdrop-blur hover:border-white disabled:opacity-30" aria-label="Previous"><ChevronUp className="h-5 w-5" /></button>
+          <button onClick={() => go(Math.min(active + 1, videos.length - 1))} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-charcoal/60 backdrop-blur hover:border-white" aria-label="Next"><ChevronDown className="h-5 w-5" /></button>
         </div>
       )}
     </div>

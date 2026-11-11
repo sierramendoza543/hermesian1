@@ -128,7 +128,7 @@ function HomeContent() {
                 <button
                   key={c.key}
                   onClick={() => go({ category: c.key })}
-                  className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-[15px] transition ${on ? 'bg-ink font-bold text-white' : 'font-medium text-ink/75 hover:bg-accent/60 hover:text-ink'}`}
+                  className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-[15px] transition ${on ? 'bg-charcoal font-bold text-white' : 'font-medium text-charcoal/75 hover:bg-accent/60 hover:text-charcoal'}`}
                 >
                   {c.label}
                 </button>
@@ -151,10 +151,10 @@ function HomeContent() {
               go({ q: search.trim() })
             }}
           >
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dim" />
             <input className="input !rounded-full !pl-10" placeholder="Search any story or topic" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search stories" />
             {q && (
-              <button type="button" onClick={() => go({})} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-line" aria-label="Clear search"><X className="h-4 w-4" /></button>
+              <button type="button" onClick={() => go({})} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-dim hover:bg-sand" aria-label="Clear search"><X className="h-4 w-4" /></button>
             )}
           </form>
 
@@ -181,7 +181,7 @@ function HomeContent() {
           {!loading && !error && stories.length === 0 && (
             <div className="card p-10 text-center">
               <p className="font-headline text-xl font-bold">No stories found</p>
-              <p className="mt-2 text-muted">{q ? 'Try fewer or simpler words, like a name and a place.' : 'Try another section.'}</p>
+              <p className="mt-2 text-dim">{q ? 'Try fewer or simpler words, like a name and a place.' : 'Try another section.'}</p>
             </div>
           )}
 
@@ -193,7 +193,7 @@ function HomeContent() {
               ))}
               <div ref={sentinel} className="h-8" />
               {loadingMore && <Skeleton className="h-40" />}
-              {!hasMore && stories.length > 6 && <p className="py-6 text-center text-sm text-muted">You&apos;re all caught up.</p>}
+              {!hasMore && stories.length > 6 && <p className="py-6 text-center text-sm text-dim">You&apos;re all caught up.</p>}
             </div>
           )}
         </main>
@@ -211,7 +211,7 @@ function HomeContent() {
                         <span className="font-headline text-xl font-black leading-none text-primary/60">{i + 1}</span>
                         <span>
                           <span className="block text-sm font-semibold leading-snug group-hover:text-primary">{s.headline}</span>
-                          <span className="mt-0.5 block text-[11px] text-muted">{s.category} · {s.sourceCount} outlets · {timeAgo(s.publishedAt)}</span>
+                          <span className="mt-0.5 block text-[11px] text-dim">{s.category} · {s.sourceCount} outlets · {timeAgo(s.publishedAt)}</span>
                         </span>
                       </Link>
                     </li>
@@ -231,17 +231,17 @@ function HomeContent() {
               </section>
             )}
 
-            <section className="card divide-y divide-line">
+            <section className="card divide-y divide-sand">
               {[
                 { href: '/scroll-feed', icon: Play, title: 'Watch', sub: 'Short news videos' },
                 { href: '/analyze', icon: ScanSearch, title: 'Bias X-ray', sub: 'Analyze any article' },
                 { href: '/games', icon: Gamepad2, title: 'Play', sub: 'Newsdle & Story Sort' },
               ].map((x) => (
                 <Link key={x.href} href={x.href} className="flex items-center gap-3 p-3.5 transition hover:bg-accent/40">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink text-white"><x.icon className="h-4 w-4" /></span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-charcoal text-white"><x.icon className="h-4 w-4" /></span>
                   <span>
                     <span className="block text-sm font-bold">{x.title}</span>
-                    <span className="block text-xs text-muted">{x.sub}</span>
+                    <span className="block text-xs text-dim">{x.sub}</span>
                   </span>
                 </Link>
               ))}

@@ -10,7 +10,7 @@ export const maxDuration = 60
 // server cache, the story's articles as posted by the client.
 export async function POST(request: Request) {
   if (rateLimited(request, 'brief', 12)) {
-    return NextResponse.json({ error: 'Too many requests — slow down a little.' }, { status: 429 })
+    return NextResponse.json({ error: 'Too many requests - slow down a little.' }, { status: 429 })
   }
   try {
     const body = await request.json()

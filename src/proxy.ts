@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Presence/expiry check only — the signature can't be verified on the Edge
+  // Presence/expiry check only - the signature can't be verified on the Edge
   // runtime, so real authorization lives in Firestore security rules.
   const session = request.cookies.get('__session')?.value
   if (!session || !isUnexpiredJwt(session)) {

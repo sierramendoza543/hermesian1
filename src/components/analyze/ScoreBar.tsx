@@ -32,10 +32,10 @@ export default function ScoreBar({
         <span className="label-mono">{label}</span>
         <span className="font-headline text-2xl font-black tabular-nums">{value > 0 && bipolar ? `+${value}` : value}</span>
       </div>
-      <div className="relative mt-3 h-2 rounded-full bg-line">
+      <div className="relative mt-3 h-2 rounded-full bg-sand">
         {bipolar ? (
           <>
-            <span className="absolute left-1/2 top-0 h-2 w-px bg-ink/30" />
+            <span className="absolute left-1/2 top-0 h-2 w-px bg-charcoal/30" />
             <span
               className="absolute top-0 h-2 rounded-full"
               style={{
@@ -49,7 +49,7 @@ export default function ScoreBar({
           <span className="absolute left-0 top-0 h-2 rounded-full" style={{ width: `${pct}%`, background: color }} />
         )}
       </div>
-      <p className="mt-2 text-xs leading-snug text-muted">{hint}</p>
+      <p className="mt-2 text-xs leading-snug text-dim">{hint}</p>
     </div>
   )
 }

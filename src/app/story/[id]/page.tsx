@@ -169,7 +169,7 @@ export default function StoryPage() {
       <div className="space-y-3">
         <Skeleton className="h-5 w-full" />
         <Skeleton className="h-5 w-10/12" />
-        <p className="text-sm text-muted">Reading {story.sourceCount} headlines…</p>
+        <p className="text-sm text-dim">Reading {story.sourceCount} headlines…</p>
       </div>
     ) : briefError && !brief ? (
       <Notice
@@ -187,12 +187,12 @@ export default function StoryPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-primary">
+      <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-dim hover:text-primary">
         <ArrowLeft className="h-4 w-4" /> Stories
       </Link>
 
       <header className="mt-4 animate-rise">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-dim">
           <span className="label-mono rounded-md bg-accent px-2 py-1 !text-primary">{story.category}</span>
           <span>{story.sourceCount} outlets</span>
           <span>· {timeAgo(story.publishedAt)}</span>
@@ -244,7 +244,7 @@ export default function StoryPage() {
                 {brief.keyFacts.length > 0 && (
                   <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                     {brief.keyFacts.slice(0, 4).map((f, i) => (
-                      <li key={i} className="flex gap-2.5 rounded-xl bg-paper p-3 text-sm leading-snug">
+                      <li key={i} className="flex gap-2.5 rounded-xl bg-cream p-3 text-sm leading-snug">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                         {f}
                       </li>
@@ -259,7 +259,7 @@ export default function StoryPage() {
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <p className="label-mono">Who covered it</p>
               {story.avgLean !== null && (
-                <p className="text-xs text-muted">
+                <p className="text-xs text-dim">
                   Average lean{' '}
                   <b className="font-mono" style={{ color: leanColor(story.avgLean) }}>
                     {signed(story.avgLean)} · {leanLabel(story.avgLean)}
@@ -290,12 +290,12 @@ export default function StoryPage() {
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
                   <p className="label-mono mb-2 !text-emerald-800">Outlets agree</p>
                   <ul className="space-y-1.5 text-sm">{brief.agree.map((x, i) => <li key={i}>✓ {x}</li>)}</ul>
-                  {brief.agree.length === 0 && <p className="text-sm text-muted">No clear consensus from the headlines.</p>}
+                  {brief.agree.length === 0 && <p className="text-sm text-dim">No clear consensus from the headlines.</p>}
                 </div>
                 <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
                   <p className="label-mono mb-2 !text-amber-800">Outlets differ</p>
                   <ul className="space-y-1.5 text-sm">{brief.differ.map((d, i) => <li key={i}>↔ {d.topic}</li>)}</ul>
-                  {brief.differ.length === 0 && <p className="text-sm text-muted">Coverage is framed similarly.</p>}
+                  {brief.differ.length === 0 && <p className="text-sm text-dim">Coverage is framed similarly.</p>}
                 </div>
               </div>
 
@@ -303,7 +303,7 @@ export default function StoryPage() {
                 <Disclosure key={i} title={d.topic} defaultOpen={i === 0}>
                   <div className="grid gap-3 md:grid-cols-2">
                     {d.perspectives.map((p, j) => (
-                      <div key={j} className="rounded-xl border border-line bg-paper p-3.5">
+                      <div key={j} className="rounded-xl border border-sand bg-cream p-3.5">
                         <p className="label-mono mb-1">{p.side}</p>
                         <p>{p.framing}</p>
                       </div>
@@ -317,7 +317,7 @@ export default function StoryPage() {
                   <ul className="space-y-3">
                     {brief.outletFraming.map((o, i) => (
                       <li key={i}>
-                        <b>{o.source}</b> — <span className="text-muted">{o.emphasis}</span>
+                        <b>{o.source}</b> - <span className="text-dim">{o.emphasis}</span>
                         {o.loadedTerms.length > 0 && (
                           <span className="ml-2 inline-flex flex-wrap gap-1">
                             {o.loadedTerms.map((t) => <span key={t} className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs text-amber-900">{t}</span>)}
@@ -336,7 +336,7 @@ export default function StoryPage() {
       {/* HEADLINES */}
       {tab === 'headlines' && (
         <section className="card mt-4 animate-rise p-4 md:p-6">
-          <div className="divide-y divide-line">
+          <div className="divide-y divide-sand">
             {rows.map(({ a, terms }) => (
               <div key={a.source + a.url} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3 sm:w-52 sm:shrink-0">
@@ -346,7 +346,7 @@ export default function StoryPage() {
                     {a.lean !== null ? (
                       <p className="font-mono text-[11px]" style={{ color: leanColor(a.lean) }}>{BUCKET_META[leanBucket(a.lean)].label}</p>
                     ) : (
-                      <p className="font-mono text-[11px] text-muted">not rated</p>
+                      <p className="font-mono text-[11px] text-dim">not rated</p>
                     )}
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export default function StoryPage() {
                     </p>
                   )}
                 </div>
-                <Link href={analyzeHref(a)} className="btn-ghost !py-1.5 text-xs" title={isPaywalled(a.domain) ? 'Paywalled outlet — you will be asked to paste the text' : 'Analyze this article'}>
+                <Link href={analyzeHref(a)} className="btn-ghost !py-1.5 text-xs" title={isPaywalled(a.domain) ? 'Paywalled outlet - you will be asked to paste the text' : 'Analyze this article'}>
                   <ScanSearch className="h-3.5 w-3.5" /> X-ray{isPaywalled(a.domain) ? ' · paste' : ''}
                 </Link>
               </div>
@@ -396,7 +396,7 @@ export default function StoryPage() {
                   <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed">{brief.discussionQuestions.map((q, i) => <li key={i}>{q}</li>)}</ol>
                 </div>
               )}
-              {brief.confidenceNote && <p className="px-1 text-xs italic text-muted">{brief.confidenceNote}</p>}
+              {brief.confidenceNote && <p className="px-1 text-xs italic text-dim">{brief.confidenceNote}</p>}
             </>
           )}
         </div>

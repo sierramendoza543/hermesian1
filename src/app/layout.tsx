@@ -13,12 +13,11 @@ const merriweather = Merriweather({
 })
 
 export const metadata: Metadata = {
-  title: { default: 'Hermesian — See every side of the story', template: '%s | Hermesian' },
-  description:
-    'Hermesian groups coverage from dozens of outlets into single stories, maps them on the political spectrum, and uses AI to expose bias with quotes and evidence.',
+  title: { default: 'Hermesian: see every side of the story', template: '%s | Hermesian' },
+  description: 'Compare how different news outlets cover the same story, see where each one falls on the political spectrum, and check any article for bias.',
   icons: {
-    icon: '/images/Hermesian%20icon%20200x200%20%282%29.png',
-    apple: '/images/Hermesian%20icon%20200x200%20%282%29.png',
+    icon: '/images/logo.png',
+    apple: '/images/logo.png',
   },
 }
 
@@ -31,7 +30,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${merriweather.variable}`}>
-      <body className="min-h-screen bg-paper font-sans text-ink">
+      <body className="min-h-screen bg-cream font-sans text-charcoal">
         <AuthProvider>
           <RootLayoutContent>{children}</RootLayoutContent>
         </AuthProvider>

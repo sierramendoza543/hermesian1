@@ -43,7 +43,7 @@ export function friendlyAuthError(error: unknown): string {
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a minute and try again.'
     case 'auth/network-request-failed':
-      return 'Network problem — check your connection and try again.'
+      return 'Network problem - check your connection and try again.'
     case 'auth/operation-not-allowed':
       return 'Email/password sign-in is not enabled for this project yet (Firebase console → Authentication → Sign-in method).'
     default:

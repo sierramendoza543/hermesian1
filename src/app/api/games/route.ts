@@ -8,7 +8,7 @@ export const maxDuration = 60
 
 export async function POST(request: Request) {
   if (rateLimited(request, 'games', 15)) {
-    return NextResponse.json({ error: 'Too many requests — take a breath and try again.' }, { status: 429 })
+    return NextResponse.json({ error: 'Too many requests - take a breath and try again.' }, { status: 429 })
   }
   try {
     const body = await request.json()

@@ -102,24 +102,24 @@ export default function ProfilePage() {
           ) : (
             <div className="flex items-center gap-2">
               <h1 className="font-headline text-2xl font-black md:text-3xl">{displayName}</h1>
-              <button onClick={() => { setNameDraft(displayName); setEditing(true) }} className="rounded-lg p-1.5 text-muted hover:bg-accent/60" aria-label="Edit name"><Edit3 className="h-4 w-4" /></button>
+              <button onClick={() => { setNameDraft(displayName); setEditing(true) }} className="rounded-lg p-1.5 text-dim hover:bg-accent/60" aria-label="Edit name"><Edit3 className="h-4 w-4" /></button>
             </div>
           )}
-          <p className="mt-1 text-sm text-muted">{user.email}</p>
+          <p className="mt-1 text-sm text-dim">{user.email}</p>
           <p className="label-mono mt-3">Level {level} · {profile?.xp || 0} XP · {earned}/{badges.length} badges</p>
         </div>
         <div className="grid grid-cols-3 gap-3 text-center md:w-72">
-          <div className="rounded-xl bg-paper p-3">
+          <div className="rounded-xl bg-cream p-3">
             <Flame className="mx-auto h-5 w-5 text-orange-500" />
             <div className="mt-1 font-headline text-2xl font-black tabular-nums">{profile?.streak || 0}</div>
             <div className="label-mono">Day streak</div>
           </div>
-          <div className="rounded-xl bg-paper p-3">
+          <div className="rounded-xl bg-cream p-3">
             <Trophy className="mx-auto h-5 w-5 text-primary" />
             <div className="mt-1 font-headline text-2xl font-black tabular-nums">{profile?.longestStreak || 0}</div>
             <div className="label-mono">Best</div>
           </div>
-          <div className="rounded-xl bg-paper p-3">
+          <div className="rounded-xl bg-cream p-3">
             <div className="text-lg leading-5">🎮</div>
             <div className="mt-1 font-headline text-2xl font-black tabular-nums">{scores.length}</div>
             <div className="label-mono">Games</div>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                 <div key={b.id} className={`card p-4 text-center ${b.earned ? '' : 'opacity-50'}`}>
                   <div className={`text-3xl ${b.earned ? '' : 'grayscale'}`}>{b.icon}</div>
                   <p className="mt-2 text-sm font-semibold">{b.title}</p>
-                  <p className="mt-0.5 text-xs text-muted">{b.description}</p>
+                  <p className="mt-0.5 text-xs text-dim">{b.description}</p>
                   <p className="label-mono mt-2">{b.earned ? 'Earned' : b.progress}</p>
                 </div>
               ))}
@@ -153,13 +153,13 @@ export default function ProfilePage() {
               {(Object.keys(GAMES) as (keyof typeof GAMES)[]).map((k) => (
                 <div key={k} className="card p-4">
                   <p className="label-mono">{GAMES[k].title}</p>
-                  <p className="mt-1 font-headline text-2xl font-black">{scores.some((s) => s.game === k) ? `${bestByGame(k)}%` : '—'}</p>
-                  <p className="text-xs text-muted">best · {scores.filter((s) => s.game === k).length} played</p>
+                  <p className="mt-1 font-headline text-2xl font-black">{scores.some((s) => s.game === k) ? `${bestByGame(k)}%` : '-'}</p>
+                  <p className="text-xs text-dim">best · {scores.filter((s) => s.game === k).length} played</p>
                 </div>
               ))}
             </div>
             {scores.length === 0 && (
-              <p className="mt-3 text-sm text-muted">No games yet. <Link href="/games" className="font-semibold text-primary hover:underline">Play one →</Link></p>
+              <p className="mt-3 text-sm text-dim">No games yet. <Link href="/games" className="font-semibold text-primary hover:underline">Play one →</Link></p>
             )}
           </section>
 
@@ -167,7 +167,7 @@ export default function ProfilePage() {
           <section className="mt-8">
             <h2 className="mb-3 font-headline text-xl font-bold">Saved analyses</h2>
             {analyses.length === 0 ? (
-              <p className="text-sm text-muted">Nothing saved yet. <Link href="/analyze" className="font-semibold text-primary hover:underline">Analyze an article →</Link></p>
+              <p className="text-sm text-dim">Nothing saved yet. <Link href="/analyze" className="font-semibold text-primary hover:underline">Analyze an article →</Link></p>
             ) : (
               <div className="space-y-3">
                 {analyses.map((a) => (
@@ -178,9 +178,9 @@ export default function ProfilePage() {
                     </div>
                     <button onClick={() => openAnalysis(a)} className="flex-1 text-left">
                       <p className="font-headline text-sm font-bold leading-snug hover:text-primary">{a.title}</p>
-                      <p className="mt-0.5 text-xs text-muted">{a.source || 'Pasted text'} · {timeAgo(a.savedAt)}</p>
+                      <p className="mt-0.5 text-xs text-dim">{a.source || 'Pasted text'} · {timeAgo(a.savedAt)}</p>
                     </button>
-                    <button onClick={async () => { await deleteAnalysis(user.uid, a.id); setAnalyses((x) => x.filter((y) => y.id !== a.id)) }} className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-red-600" aria-label="Delete analysis"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={async () => { await deleteAnalysis(user.uid, a.id); setAnalyses((x) => x.filter((y) => y.id !== a.id)) }} className="rounded-lg p-2 text-dim hover:bg-red-50 hover:text-red-600" aria-label="Delete analysis"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
               </div>
@@ -191,21 +191,21 @@ export default function ProfilePage() {
           <section className="mt-8">
             <h2 className="mb-3 font-headline text-xl font-bold">Saved stories</h2>
             {stories.length === 0 ? (
-              <p className="text-sm text-muted">No saved stories. Open any story and tap “Save story”. <Link href="/" className="font-semibold text-primary hover:underline">Browse →</Link></p>
+              <p className="text-sm text-dim">No saved stories. Open any story and tap “Save story”. <Link href="/" className="font-semibold text-primary hover:underline">Browse →</Link></p>
             ) : (
               <div className="space-y-3">
                 {stories.map((s) => (
                   <div key={s.id} className="card flex items-center gap-4 p-4">
                     <Link href={`/story/${s.id}`} className="flex-1">
                       <p className="font-headline text-sm font-bold leading-snug hover:text-primary">{s.headline}</p>
-                      <p className="mt-0.5 text-xs text-muted">{s.category} · {s.sourceCount} outlets · saved {timeAgo(s.savedAt)}</p>
+                      <p className="mt-0.5 text-xs text-dim">{s.category} · {s.sourceCount} outlets · saved {timeAgo(s.savedAt)}</p>
                     </Link>
-                    <button onClick={async () => { await unsaveStory(user.uid, s.id); setStories((x) => x.filter((y) => y.id !== s.id)) }} className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-red-600" aria-label="Remove saved story"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={async () => { await unsaveStory(user.uid, s.id); setStories((x) => x.filter((y) => y.id !== s.id)) }} className="rounded-lg p-2 text-dim hover:bg-red-50 hover:text-red-600" aria-label="Remove saved story"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
               </div>
             )}
-            <p className="mt-2 text-xs text-muted">Saved stories link to live coverage; a story that has aged out of the news cycle may no longer open.</p>
+            <p className="mt-2 text-xs text-dim">Saved stories link to live coverage; a story that has aged out of the news cycle may no longer open.</p>
           </section>
 
           <div className="mt-10">

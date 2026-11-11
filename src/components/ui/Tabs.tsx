@@ -24,12 +24,12 @@ export default function Tabs<T extends string>({
           aria-selected={value === t.key}
           onClick={() => onChange(t.key)}
           className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition ${
-            value === t.key ? 'bg-ink text-white shadow-card' : 'text-ink/70 hover:bg-accent/60 hover:text-ink'
+            value === t.key ? 'bg-charcoal text-white shadow-card' : 'text-charcoal/70 hover:bg-accent/60 hover:text-charcoal'
           }`}
         >
           {t.label}
           {t.count !== undefined && t.count > 0 && (
-            <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] ${value === t.key ? 'bg-white/20' : 'bg-line'}`}>{t.count}</span>
+            <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] ${value === t.key ? 'bg-white/20' : 'bg-sand'}`}>{t.count}</span>
           )}
         </button>
       ))}

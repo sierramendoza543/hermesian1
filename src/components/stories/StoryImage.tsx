@@ -52,7 +52,7 @@ export default function StoryImage({
 
   const gradient = GRADIENTS[id.charCodeAt(0) % GRADIENTS.length]
   return (
-    <div ref={ref} className={`relative overflow-hidden bg-line ${className}`} style={{ background: src && !broken ? undefined : gradient }}>
+    <div ref={ref} className={`relative overflow-hidden bg-sand ${className}`} style={{ background: src && !broken ? undefined : gradient }}>
       {src && !broken && (
         // eslint-disable-next-line @next/next/no-img-element
         <img

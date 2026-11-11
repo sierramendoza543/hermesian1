@@ -60,8 +60,8 @@ export default function LeanGauge({
         <div className="mt-1 text-sm font-semibold">{leanLabel(lean)} framing</div>
         {confidence !== undefined && <div className="label-mono mt-1">{confidence}% model confidence</div>}
         {out && (
-          <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted">
-            <span className="inline-block h-2.5 w-2.5 rounded-full border border-white bg-ink shadow" />
+          <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-dim">
+            <span className="inline-block h-2.5 w-2.5 rounded-full border border-white bg-charcoal shadow" />
             {outletName} typical rating: {signed(outletLean as number)}
           </div>
         )}

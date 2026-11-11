@@ -15,7 +15,7 @@ function fail(error: string, status: number, extra: Record<string, unknown> = {}
 
 export async function POST(request: Request) {
   if (rateLimited(request, 'analyze', 8)) {
-    return fail('Too many analyses in a short time — wait a minute and try again.', 429)
+    return fail('Too many analyses in a short time - wait a minute and try again.', 429)
   }
 
   let body: any
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     text = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
     if (!text) return fail('Provide a link or paste some article text.', 400)
-    if (text.length < MIN_CHARS) return fail('That\'s too short to analyze reliably — paste at least a few paragraphs.', 400)
+    if (text.length < MIN_CHARS) return fail('That\'s too short to analyze reliably - paste at least a few paragraphs.', 400)
     text = text.slice(0, MAX_INPUT_CHARS)
 
     if (url) url = await resolveGoogleNewsUrl(url)

@@ -58,7 +58,7 @@ export default function AnnotatedText({ text, highlights }: { text: string; high
             key={k}
             onClick={() => toggle(k)}
             className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
-              off.has(k) ? 'border-line bg-white text-muted line-through' : 'border-ink/20 bg-white text-ink'
+              off.has(k) ? 'border-sand bg-white text-dim line-through' : 'border-charcoal/20 bg-white text-charcoal'
             }`}
           >
             <span className={`inline-block h-3 w-4 ${STYLE[k].cls}`} />
@@ -66,7 +66,7 @@ export default function AnnotatedText({ text, highlights }: { text: string; high
           </button>
         ))}
       </div>
-      <div className="max-h-[560px] overflow-y-auto rounded-xl border border-line bg-paper p-5 text-[15px] leading-8 whitespace-pre-wrap">
+      <div className="max-h-[560px] overflow-y-auto rounded-xl border border-sand bg-cream p-5 text-[15px] leading-8 whitespace-pre-wrap">
         {segments.map((s, i) => {
           const inner = s.mark ? (
             <span className={STYLE[s.mark.kind].cls} title={s.mark.label}>
@@ -84,7 +84,7 @@ export default function AnnotatedText({ text, highlights }: { text: string; high
           )
         })}
       </div>
-      <p className="mt-2 text-xs text-muted">Hover any highlight for its label. Click a legend chip to hide that layer.</p>
+      <p className="mt-2 text-xs text-dim">Hover any highlight for its label. Click a legend chip to hide that layer.</p>
     </div>
   )
 }

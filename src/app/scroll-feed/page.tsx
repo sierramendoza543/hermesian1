@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: 'News videos' }
 
 export default function ScrollFeedPage() {
   return (
-    <div className="h-[calc(100dvh-4rem)] bg-ink">
+    <div className="h-[calc(100dvh-4rem)] bg-charcoal">
       <ScrollFeed />
     </div>
   )

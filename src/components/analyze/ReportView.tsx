@@ -31,10 +31,10 @@ const DIR_STYLE: Record<string, string> = {
 
 function Stat({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   return (
-    <div className="rounded-xl border border-line bg-paper p-3.5" title={hint}>
+    <div className="rounded-xl border border-sand bg-cream p-3.5" title={hint}>
       <div className="font-headline text-2xl font-black tabular-nums">{value}</div>
       <div className="label-mono mt-0.5">{label}</div>
-      <div className="mt-1 text-[11px] leading-snug text-muted">{hint}</div>
+      <div className="mt-1 text-[11px] leading-snug text-dim">{hint}</div>
     </div>
   )
 }
@@ -55,7 +55,7 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
         <div className="flex-1">
           <p className="label-mono">{article.source || article.domain || 'Pasted text'}</p>
           <h1 className="mt-1 font-headline text-xl font-black leading-snug md:text-2xl">{article.title}</h1>
-          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-dim">
             <span>{article.totalWords.toLocaleString()} words{article.truncated ? ` (first ${stats.words.toLocaleString()} analyzed)` : ''}</span>
             {result.provider && <span>Model: {result.provider}</span>}
             {a && (
@@ -87,42 +87,42 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
             <p className="font-headline text-lg font-bold leading-snug">{a.summary}</p>
             <div className="mt-3"><Disclosure title="Why this score?">{a.leanReasoning}</Disclosure></div>
 
-            <div className="mt-5 overflow-hidden rounded-xl border border-line text-sm">
-              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-line bg-paper px-4 py-2 label-mono">
+            <div className="mt-5 overflow-hidden rounded-xl border border-sand text-sm">
+              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-sand bg-cream px-4 py-2 label-mono">
                 <span>Independent signal</span>
                 <span>Lean</span>
               </div>
-              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-line px-4 py-2.5">
+              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-sand px-4 py-2.5">
                 <span>AI reading of this text</span>
                 <b style={{ color: leanColor(a.leanScore) }}>{signed(a.leanScore)} · {leanLabel(a.leanScore)}</b>
               </div>
-              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-line px-4 py-2.5">
+              <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-sand px-4 py-2.5">
                 <span>
                   Partisan-phrase balance
-                  <span className="block text-xs text-muted">
+                  <span className="block text-xs text-dim">
                     {stats.loadedTerms.leftCoded} left-coded vs {stats.loadedTerms.rightCoded} right-coded phrases
                   </span>
                 </span>
                 {stats.lexiconLean !== null ? (
                   <b style={{ color: leanColor(stats.lexiconLean) }}>{signed(stats.lexiconLean)}</b>
                 ) : (
-                  <span className="text-xs text-muted">too few hits</span>
+                  <span className="text-xs text-dim">too few hits</span>
                 )}
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-x-4 px-4 py-2.5">
                 <span>
                   {outlet ? `${outlet.name} typical rating` : 'Outlet rating'}
-                  <span className="block text-xs text-muted">{outlet ? `${outlet.reliability} reliability · approximate` : 'Publisher not in our table'}</span>
+                  <span className="block text-xs text-dim">{outlet ? `${outlet.reliability} reliability · approximate` : 'Publisher not in our table'}</span>
                 </span>
                 {outlet ? (
                   <b style={{ color: leanColor(outlet.lean) }}>{signed(outlet.lean)} · {BUCKET_META[leanBucket(outlet.lean)].label}</b>
                 ) : (
-                  <span className="text-xs text-muted">n/a</span>
+                  <span className="text-xs text-dim">n/a</span>
                 )}
               </div>
             </div>
             {outlet && (
-              <p className="mt-3 text-xs text-muted">
+              <p className="mt-3 text-xs text-dim">
                 This article reads {Math.abs(a.leanScore - outlet.lean) <= 15 ? 'in line with' : a.leanScore > outlet.lean ? 'further right than' : 'further left than'}{' '}
                 {outlet.name}&apos;s typical rating (difference {signed(a.leanScore - outlet.lean)}).
               </p>
@@ -160,23 +160,23 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
       {tab === 'evidence' && a && (
         <Section kicker={`Evidence · ${a.biasEvidence.length} verified`} title="Where the bias shows up">
           {a.biasEvidence.length === 0 ? (
-            <Notice>No clear, quotable bias signals were found in this text — which is itself a finding.</Notice>
+            <Notice>No clear, quotable bias signals were found in this text - which is itself a finding.</Notice>
           ) : (
             <div className="space-y-4">
               {a.biasEvidence.map((e, i) => (
-                <div key={i} className="rounded-xl border border-line p-4">
+                <div key={i} className="rounded-xl border border-sand p-4">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${DIR_STYLE[e.direction]}`}>
                       {e.direction === 'neutral' ? 'loaded (non-partisan)' : `favors ${e.direction}`}
                     </span>
                     <span className="label-mono">{e.technique}</span>
-                    <span className="ml-auto flex items-center gap-1 text-xs text-muted" title={`Severity ${e.severity} of 5`}>
+                    <span className="ml-auto flex items-center gap-1 text-xs text-dim" title={`Severity ${e.severity} of 5`}>
                       {[1, 2, 3, 4, 5].map((n) => (
-                        <span key={n} className={`h-2 w-2 rounded-full ${n <= e.severity ? 'bg-primary' : 'bg-line'}`} />
+                        <span key={n} className={`h-2 w-2 rounded-full ${n <= e.severity ? 'bg-primary' : 'bg-sand'}`} />
                       ))}
                     </span>
                   </div>
-                  <blockquote className="border-l-4 border-primary/60 bg-paper px-4 py-2.5 font-headline text-[15px] italic leading-relaxed">
+                  <blockquote className="border-l-4 border-primary/60 bg-cream px-4 py-2.5 font-headline text-[15px] italic leading-relaxed">
                     “{e.quote}”
                   </blockquote>
                   <p className="mt-2.5 text-sm leading-relaxed">{e.explanation}</p>
@@ -193,22 +193,22 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="label-mono border-b border-line">
+                <tr className="label-mono border-b border-sand">
                   <th className="py-2 pr-4 font-medium">As written</th>
                   <th className="py-2 pr-4 font-medium">Leans</th>
                   <th className="py-2 pr-4 font-medium">More neutral</th>
                   <th className="py-2 font-medium">Why</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody className="divide-y divide-sand">
                 {a.loadedLanguage.map((l, i) => (
                   <tr key={i} className="align-top">
                     <td className="py-3 pr-4 font-semibold text-red-900">“{l.phrase}”</td>
                     <td className="py-3 pr-4">
                       <span className={`rounded px-1.5 py-0.5 text-xs font-semibold ${DIR_STYLE[l.direction]}`}>{l.direction}</span>
                     </td>
-                    <td className="py-3 pr-4 text-emerald-800">{l.neutralAlternative || '—'}</td>
-                    <td className="py-3 text-muted">{l.why}</td>
+                    <td className="py-3 pr-4 text-emerald-800">{l.neutralAlternative || '-'}</td>
+                    <td className="py-3 text-dim">{l.why}</td>
                   </tr>
                 ))}
               </tbody>
@@ -227,7 +227,7 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
                   <div key={i}>
                     <p className="mb-1 inline-block rounded-md bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-900">{f.name}</p>
                     <blockquote className="border-l-4 border-purple-300 pl-3 text-sm italic">“{f.quote}”</blockquote>
-                    <p className="mt-1.5 text-sm text-ink/80">{f.explanation}</p>
+                    <p className="mt-1.5 text-sm text-charcoal/80">{f.explanation}</p>
                   </div>
                 ))}
               </div>
@@ -250,7 +250,7 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
                       <span className="rounded-md bg-stone-100 px-2 py-0.5 text-xs text-stone-700">{c.checkability} to check</span>
                     </div>
                     <blockquote className="border-l-4 border-sky-300 pl-3 text-sm italic">“{c.quote}”</blockquote>
-                    <p className="mt-1.5 text-sm text-ink/80"><b>How to verify:</b> {c.howToVerify}</p>
+                    <p className="mt-1.5 text-sm text-charcoal/80"><b>How to verify:</b> {c.howToVerify}</p>
                   </div>
                 ))}
               </div>
@@ -262,21 +262,21 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
       {/* Sources + framing */}
       {tab === 'sources' && a && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Section kicker="Sourcing" title="Who is quoted — and who isn't">
+          <Section kicker="Sourcing" title="Who is quoted - and who isn't">
             {a.sources.named.length > 0 ? (
               <ul className="space-y-2.5 text-sm">
                 {a.sources.named.map((s, i) => (
                   <li key={i} className="flex items-start justify-between gap-3">
                     <span>
                       <b>{s.name}</b>
-                      {s.role && <span className="text-muted"> — {s.role}</span>}
+                      {s.role && <span className="text-dim"> - {s.role}</span>}
                     </span>
-                    {s.perspective && <span className="label-mono shrink-0 rounded bg-paper px-1.5 py-0.5">{s.perspective}</span>}
+                    {s.perspective && <span className="label-mono shrink-0 rounded bg-cream px-1.5 py-0.5">{s.perspective}</span>}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted">No named sources identified.</p>
+              <p className="text-sm text-dim">No named sources identified.</p>
             )}
             {a.sources.missingPerspectives.length > 0 && (
               <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
@@ -301,7 +301,7 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
               </div>
             </div>
             {a.framing.oppositeFraming && (
-              <div className="mt-5 rounded-xl bg-ink p-4 text-sm leading-relaxed text-white">
+              <div className="mt-5 rounded-xl bg-charcoal p-4 text-sm leading-relaxed text-white">
                 <p className="label-mono mb-1.5 !text-white/60">How the other side might frame it</p>
                 {a.framing.oppositeFraming}
               </div>
@@ -317,13 +317,13 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
           <Stat label="Words" value={stats.words.toLocaleString()} hint={`${stats.sentences} sentences, ${stats.avgSentenceWords} words each on average.`} />
           <Stat label="Reading level" value={`Gr. ${Math.max(0, stats.gradeLevel).toFixed(1)}`} hint={`${gradeLabel} · Flesch ease ${stats.readingEase}.`} />
           <Stat label="Direct quotes" value={stats.quotes} hint={`${stats.quotedWordShare}% of the text is quoted speech.`} />
-          <Stat label="Attributions" value={stats.attributions} hint={'"said", "according to" … — signals sourced claims.'} />
+          <Stat label="Attributions" value={stats.attributions} hint={'"said", "according to" … - signals sourced claims.'} />
           <Stat label="Anonymous sources" value={stats.anonymousSources} hint="Unnamed sourcing is harder for readers to check." />
           <Stat label="Numbers cited" value={stats.numbers} hint="Figures and percentages that can be verified." />
-          <Stat label="Hedging words" value={stats.hedges} hint={'"may", "reportedly" … — signals uncertainty.'} />
-          <Stat label="Intensifiers" value={stats.intensifiers} hint={'"very", "massive" … — emphasis words.'} />
+          <Stat label="Hedging words" value={stats.hedges} hint={'"may", "reportedly" … - signals uncertainty.'} />
+          <Stat label="Intensifiers" value={stats.intensifiers} hint={'"very", "massive" … - emphasis words.'} />
           <Stat label="Loaded terms /1k" value={stats.loadedPer1000} hint={`${stats.loadedTerms.charged} charged · ${stats.loadedTerms.leftCoded} left-coded · ${stats.loadedTerms.rightCoded} right-coded.`} />
-          <Stat label="First-person /1k" value={stats.firstPersonPer1000} hint={'"I", "we", "our" — more common in opinion writing.'} />
+          <Stat label="First-person /1k" value={stats.firstPersonPer1000} hint={'"I", "we", "our" - more common in opinion writing.'} />
           <Stat label="Exclamation marks" value={stats.exclamations} hint="Rare in straight news reporting." />
           <Stat label="ALL-CAPS words" value={stats.allCapsWords} hint="Shouting for emphasis (acronyms excluded by length)." />
         </div>
@@ -332,14 +332,14 @@ export default function ReportView({ result }: { result: AnalysisResult }) {
             <p className="label-mono mb-2">Most frequent charged / partisan-coded terms</p>
             <div className="flex flex-wrap gap-2">
               {stats.topTerms.map((t) => (
-                <span key={t.kind + t.term} className="rounded-full border border-line bg-white px-3 py-1 text-xs">
-                  <b>{t.term}</b> ×{t.count} <span className="text-muted">· {t.kind}</span>
+                <span key={t.kind + t.term} className="rounded-full border border-sand bg-white px-3 py-1 text-xs">
+                  <b>{t.term}</b> ×{t.count} <span className="text-dim">· {t.kind}</span>
                 </span>
               ))}
             </div>
           </div>
         )}
-        <p className="mt-4 text-xs text-muted">Term lists are indicators, not proof — context decides whether a word is biased.</p>
+        <p className="mt-4 text-xs text-dim">Term lists are indicators, not proof - context decides whether a word is biased.</p>
       </Section>
       )}
 

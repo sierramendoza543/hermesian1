@@ -74,7 +74,7 @@ function AnalyzeContent() {
         setResult(data)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       } catch {
-        setError('Network error — check your connection and try again.')
+        setError('Network error - check your connection and try again.')
       } finally {
         if (stepTimer.current) clearInterval(stepTimer.current)
         setLoading(false)
@@ -173,7 +173,7 @@ function AnalyzeContent() {
           <div className="mb-6">
             <p className="label-mono">Bias X-ray</p>
             <h1 className="mt-2 font-headline text-3xl font-black md:text-4xl">Analyze an article</h1>
-            <p className="mt-2 text-muted">Paste a link or the text. Every finding comes with a verified quote.</p>
+            <p className="mt-2 text-dim">Paste a link or the text. Every finding comes with a verified quote.</p>
           </div>
 
           <form onSubmit={submit} className="card space-y-4 p-5 md:p-7">
@@ -209,7 +209,7 @@ function AnalyzeContent() {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                 />
-                <p className="text-xs text-muted">{text.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words</p>
+                <p className="text-xs text-dim">{text.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words</p>
               </>
             )}
 
@@ -254,14 +254,14 @@ function AnalyzeContent() {
                     <OutletIcon name={a.source} domain={a.domain} lean={a.lean} size={34} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold leading-snug">{a.title}</span>
-                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-dim">
                         <span>{a.source}</span>
                         <span>· {timeAgo(a.publishedAt)}</span>
                         <span>· {a.sourceCount} outlets covered it</span>
                         {a.paywalled && <span className="inline-flex items-center gap-1 text-amber-700"><Lock className="h-3 w-3" /> paste needed</span>}
                       </span>
                     </span>
-                    <ScanSearch className="h-4 w-4 shrink-0 text-muted" />
+                    <ScanSearch className="h-4 w-4 shrink-0 text-dim" />
                   </button>
                 ))}
               </div>
@@ -272,15 +272,15 @@ function AnalyzeContent() {
             <div className="card mt-6 p-5 md:p-7" aria-live="polite">
               <ol className="space-y-3">
                 {STEPS.map((s, i) => (
-                  <li key={s} className={`flex items-center gap-3 text-sm ${i > step ? 'text-muted/60' : ''}`}>
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-white">
+                  <li key={s} className={`flex items-center gap-3 text-sm ${i > step ? 'text-dim/60' : ''}`}>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-sand bg-white">
                       {i < step ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : i === step ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : null}
                     </span>
                     {s}
                   </li>
                 ))}
               </ol>
-              <p className="mt-4 text-xs text-muted">About 15 seconds.</p>
+              <p className="mt-4 text-xs text-dim">About 15 seconds.</p>
             </div>
           )}
 
@@ -318,7 +318,7 @@ function AnalyzeContent() {
 
 export default function AnalyzePage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-5xl px-4 py-12 text-muted">Loading…</div>}>
+    <Suspense fallback={<div className="mx-auto max-w-5xl px-4 py-12 text-dim">Loading…</div>}>
       <AnalyzeContent />
     </Suspense>
   )

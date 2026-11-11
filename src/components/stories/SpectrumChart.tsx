@@ -55,7 +55,7 @@ export default function SpectrumChart({ articles, marker }: Props) {
         {placed.map(({ a, pct, row }) => (
           <span
             key={`s-${a.source}-${a.url}`}
-            className="absolute z-0 w-px -translate-x-1/2 bg-ink/15"
+            className="absolute z-0 w-px -translate-x-1/2 bg-charcoal/15"
             style={{ left: `${pct}%`, bottom: barBottom + BAR_H, height: GAP + row * STEP + ICON / 2 }}
           />
         ))}
@@ -75,15 +75,15 @@ export default function SpectrumChart({ articles, marker }: Props) {
             ))}
             {marker && (
               <span className="absolute -top-1 -translate-x-1/2" style={{ left: `${Math.min(98, Math.max(2, (marker.lean + 100) / 2))}%` }}>
-                <span className="block h-6 w-1 rounded bg-ink" />
-                <span className="absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold text-white">{marker.label}</span>
+                <span className="block h-6 w-1 rounded bg-charcoal" />
+                <span className="absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap rounded bg-charcoal px-1.5 py-0.5 text-[10px] font-semibold text-white">{marker.label}</span>
               </span>
             )}
           </div>
         </div>
 
         {/* section labels */}
-        <div className="absolute inset-x-0 bottom-0 grid grid-cols-5 text-center font-mono text-[10px] uppercase tracking-wider text-muted" style={{ height: LABELS_H - 4 }}>
+        <div className="absolute inset-x-0 bottom-0 grid grid-cols-5 text-center font-mono text-[10px] uppercase tracking-wider text-dim" style={{ height: LABELS_H - 4 }}>
           {BUCKET_ORDER.map((b) => (
             <span key={b} className="truncate">{BUCKET_META[b].label}</span>
           ))}

@@ -16,7 +16,7 @@ export interface GenerateOptions {
   order?: Provider[]
   /** Overall time limit across all attempts (default 45s). */
   timeoutMs?: number
-  /** Prefer the quickest model — for short, simple jobs. */
+  /** Prefer the quickest model - for short, simple jobs. */
   fast?: boolean
 }
 
@@ -97,7 +97,7 @@ async function callClaude(o: GenerateOptions, deadline: number): Promise<string>
     model: CLAUDE_MODEL,
     max_tokens: o.maxTokens ?? 4096,
     temperature: o.temperature ?? 0.2,
-    system: `${o.system}\n\nRespond with a single valid JSON value and nothing else — no markdown fences, no commentary.`,
+    system: `${o.system}\n\nRespond with a single valid JSON value and nothing else - no markdown fences, no commentary.`,
     messages: [{ role: 'user', content: o.prompt }],
   })
   const block = res.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
@@ -229,7 +229,7 @@ export async function generateJSON<T = any>(options: GenerateOptions): Promise<{
       errors.push(`${provider}: ${msg}`)
       // Don't keep waiting on a provider that is down: skip it for a while
       cooldown.set(provider, Date.now() + (/\b(401|403)\b|credit|invalid.*key/i.test(msg) ? 30 * 60_000 : 6_000))
-      console.warn(`[llm] ${provider} failed — ${msg.slice(0, 160)}`)
+      console.warn(`[llm] ${provider} failed - ${msg.slice(0, 160)}`)
     }
   }
   throw new Error(`All AI providers failed. ${errors.join(' | ')}`)

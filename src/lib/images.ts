@@ -38,7 +38,7 @@ async function fetchHead(url: string): Promise<string | null> {
     cache: 'no-store',
   })
   if (!res.ok || !res.body) return null
-  // Only the <head> matters — read until it closes or 250KB
+  // Only the <head> matters - read until it closes or 250KB
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let html = ''

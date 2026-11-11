@@ -32,7 +32,7 @@ function Ring({ pct }: { pct: number }) {
         strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} transform="rotate(-90 65 65)"
         style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
       />
-      <text x="65" y="72" textAnchor="middle" className="fill-ink font-headline text-3xl font-black">{pct}%</text>
+      <text x="65" y="72" textAnchor="middle" className="fill-charcoal font-headline text-3xl font-black">{pct}%</text>
     </svg>
   )
 }
@@ -108,12 +108,12 @@ export default function GameRunner({
 
   if (done) {
     const pct = Math.round((score / items.length) * 100)
-    const verdict = pct === 100 ? 'Flawless. Editor-in-chief material.' : pct >= 80 ? 'Sharp eyes — you read the news like a pro.' : pct >= 50 ? 'Solid. A little more practice and you\'ll spot everything.' : 'Good start — read the explanations below and try again.'
+    const verdict = pct === 100 ? 'Flawless. Editor-in-chief material.' : pct >= 80 ? 'Sharp eyes - you read the news like a pro.' : pct >= 50 ? 'Solid. A little more practice and you\'ll spot everything.' : 'Good start - read the explanations below and try again.'
     return (
       <div className="card animate-pop p-6 text-center md:p-10">
         <div className="flex justify-center"><Ring pct={pct} /></div>
         <h2 className="mt-4 font-headline text-3xl font-black">{score} / {items.length} correct</h2>
-        <p className="mt-2 text-muted">{verdict}</p>
+        <p className="mt-2 text-dim">{verdict}</p>
         <p className="label-mono mt-3">Best streak: {bestStreak}</p>
         {footer}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -121,13 +121,13 @@ export default function GameRunner({
         </div>
         <div className="mt-8 space-y-3 text-left">
           {items.map((it, i) => (
-            <div key={it.id} className="flex gap-3 rounded-xl border border-line p-3 text-sm">
+            <div key={it.id} className="flex gap-3 rounded-xl border border-sand p-3 text-sm">
               <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white ${results[i] ? 'bg-emerald-600' : 'bg-red-500'}`}>
                 {results[i] ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
               </span>
               <div>
                 <p className="font-semibold">{it.body || it.prompt}</p>
-                <p className="mt-0.5 text-muted">Answer: {it.options[it.answer]} — {it.explanation}</p>
+                <p className="mt-0.5 text-dim">Answer: {it.options[it.answer]} - {it.explanation}</p>
               </div>
             </div>
           ))}
@@ -142,7 +142,7 @@ export default function GameRunner({
         <span className="label-mono">Question {index + 1} of {items.length}</span>
         <span className="font-semibold tabular-nums">Score {score}</span>
       </div>
-      <div className="mb-6 h-1.5 overflow-hidden rounded-full bg-line">
+      <div className="mb-6 h-1.5 overflow-hidden rounded-full bg-sand">
         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((index + (answered ? 1 : 0)) / items.length) * 100}%` }} />
       </div>
 
@@ -151,7 +151,7 @@ export default function GameRunner({
           <p className="font-headline text-lg font-bold leading-snug md:text-xl">{item.prompt}</p>
         </div>
         {item.body && (
-          <blockquote className="mt-4 rounded-xl border-l-4 border-primary bg-paper p-4 font-headline text-base leading-relaxed md:text-lg">
+          <blockquote className="mt-4 rounded-xl border-l-4 border-primary bg-cream p-4 font-headline text-base leading-relaxed md:text-lg">
             {answered ? <Highlighted text={item.body} terms={item.highlights} /> : item.body}
           </blockquote>
         )}
@@ -161,12 +161,12 @@ export default function GameRunner({
             const correct = i === item.answer
             const chosen = i === picked
             const style = !answered
-              ? 'border-line bg-white hover:border-primary hover:bg-accent/40'
+              ? 'border-sand bg-white hover:border-primary hover:bg-accent/40'
               : correct
               ? 'border-emerald-500 bg-emerald-50'
               : chosen
               ? 'border-red-400 bg-red-50'
-              : 'border-line bg-white opacity-60'
+              : 'border-sand bg-white opacity-60'
             return (
               <button
                 key={i}
@@ -174,7 +174,7 @@ export default function GameRunner({
                 disabled={answered}
                 className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition ${style}`}
               >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-line bg-paper font-mono text-xs">{i + 1}</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-sand bg-cream font-mono text-xs">{i + 1}</span>
                 <span className="flex-1">{opt}</span>
                 {answered && correct && <Check className="h-4 w-4 text-emerald-600" />}
                 {answered && chosen && !correct && <X className="h-4 w-4 text-red-500" />}
@@ -184,7 +184,7 @@ export default function GameRunner({
         </div>
 
         {answered && (
-          <div className="mt-6 animate-rise rounded-xl bg-ink p-4 text-sm leading-relaxed text-white">
+          <div className="mt-6 animate-rise rounded-xl bg-charcoal p-4 text-sm leading-relaxed text-white">
             <p className="font-semibold">{picked === item.answer ? '✓ Correct' : '✗ Not quite'}</p>
             {item.reveal && <p className="mt-1 text-white/70">{item.reveal}</p>}
             <p className="mt-1.5 text-white/85">{item.explanation}</p>
@@ -198,7 +198,7 @@ export default function GameRunner({
           </button>
         )}
       </div>
-      <p className="mt-3 text-center text-xs text-muted">Tip: press 1–{item.options.length} to answer, Enter for next.</p>
+      <p className="mt-3 text-center text-xs text-dim">Tip: press 1–{item.options.length} to answer, Enter for next.</p>
     </div>
   )
 }

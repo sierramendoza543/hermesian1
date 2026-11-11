@@ -16,7 +16,7 @@ export default function Notice({
       ? 'border-red-200 bg-red-50 text-red-900'
       : tone === 'warn'
       ? 'border-amber-200 bg-amber-50 text-amber-900'
-      : 'border-line bg-white text-ink'
+      : 'border-sand bg-white text-charcoal'
   const Icon = tone === 'info' ? Info : AlertTriangle
   return (
     <div className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${styles}`} role={tone === 'error' ? 'alert' : undefined}>

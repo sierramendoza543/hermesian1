@@ -35,28 +35,28 @@ h1, h2, h3, .font-headline {
 /* Reusable building blocks */
 @layer components {
   .card {
-    @apply rounded-2xl border border-line bg-white shadow-card;
+    @apply rounded-2xl border border-sand bg-white shadow-card;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-ink text-white hover:bg-primary;
+    @apply btn bg-charcoal text-white hover:bg-primary;
   }
   .btn-ghost {
-    @apply btn border border-line bg-white text-ink hover:border-primary hover:text-primary;
+    @apply btn border border-sand bg-white text-charcoal hover:border-primary hover:text-primary;
   }
   .chip {
-    @apply inline-flex items-center rounded-full border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink transition hover:border-primary;
+    @apply inline-flex items-center rounded-full border border-sand bg-white px-3 py-1.5 text-sm font-medium text-charcoal transition hover:border-primary;
   }
   .chip-active {
-    @apply border-ink bg-ink text-white hover:border-ink;
+    @apply border-charcoal bg-charcoal text-white hover:border-charcoal;
   }
   .label-mono {
-    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted;
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-dim;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+    @apply w-full rounded-xl border border-sand bg-white px-4 py-3 text-sm text-charcoal placeholder:text-dim/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
   }
 }
 

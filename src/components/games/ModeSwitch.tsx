@@ -7,12 +7,12 @@ export type PlayMode = 'daily' | 'unlimited'
 
 export function ModeSwitch({ mode, onChange }: { mode: PlayMode; onChange: (m: PlayMode) => void }) {
   return (
-    <div className="mx-auto mt-4 flex w-fit rounded-full border border-line bg-white p-1 text-sm font-semibold">
+    <div className="mx-auto mt-4 flex w-fit rounded-full border border-sand bg-white p-1 text-sm font-semibold">
       {(['daily', 'unlimited'] as PlayMode[]).map((m) => (
         <button
           key={m}
           onClick={() => onChange(m)}
-          className={`rounded-full px-4 py-1.5 capitalize transition ${mode === m ? 'bg-ink text-white' : 'text-ink/70 hover:text-ink'}`}
+          className={`rounded-full px-4 py-1.5 capitalize transition ${mode === m ? 'bg-charcoal text-white' : 'text-charcoal/70 hover:text-charcoal'}`}
         >
           {m === 'daily' ? 'Daily' : 'Unlimited'}
         </button>
